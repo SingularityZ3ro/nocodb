@@ -585,7 +585,8 @@ export interface ColumnType {
     | 'User'
     | 'CreatedBy'
     | 'LastModifiedBy'
-    | 'AI';
+    | 'AI'
+    | 'Order';
   /** Is Unsigned? */
   un?: BoolType;
   /** Is unique? */
@@ -2119,7 +2120,8 @@ export interface NormalColumnRequestType {
     | 'User'
     | 'CreatedBy'
     | 'LastModifiedBy'
-    | 'AI';
+    | 'AI'
+    | 'Order';
   /** Is this column unique? */
   un?: BoolType;
   /** Is this column unique? */
@@ -8741,7 +8743,6 @@ export class Api<
       orgs: string,
       baseName: string,
       tableName: string,
-      data: object,
       query?: {
         where?: string;
         viewId?: string;
@@ -8758,8 +8759,6 @@ export class Api<
         path: `/api/v1/db/data/bulk/${orgs}/${baseName}/${tableName}/all`,
         method: 'DELETE',
         query: query,
-        body: data,
-        type: ContentType.Json,
         format: 'json',
         ...params,
       }),
@@ -12838,6 +12837,33 @@ export class Api<
     ) =>
       this.request<any[], any>({
         path: `/api/v2/ai/tables/${modelId}/rows/generate`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * @description Fill AI data for specified rows
+     *
+     * @tags Ai
+     * @name DataFill
+     * @summary Fill AI Data
+     * @request POST:/api/v2/ai/tables/{modelId}/rows/fill
+     * @response `200` `(any)[]` OK
+     */
+    dataFill: (
+      modelId: string,
+      data: {
+        rows?: any[];
+        numRows: number;
+        generateIds: string[];
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<any[], any>({
+        path: `/api/v2/ai/tables/${modelId}/rows/fill`,
         method: 'POST',
         body: data,
         type: ContentType.Json,

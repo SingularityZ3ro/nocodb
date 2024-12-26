@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ButtonActionsType,
   type ButtonType,
   type ColumnReqType,
   type ColumnType,
@@ -8,6 +7,7 @@ import {
   UITypes,
   type ViewType,
   ViewTypes,
+  isAIPromptCol,
   isCreatedOrLastModifiedByCol,
   isCreatedOrLastModifiedTimeCol,
   isLinksOrLTAR,
@@ -144,6 +144,8 @@ const { loadViewAggregate } = useViewAggregateOrThrow()
 
 const { generateRows, generatingRows, generatingColumnRows, generatingColumns, aiIntegrations } = useNocoAi()
 
+const { isFeatureEnabled } = useBetaFeatureToggle()
+
 // Element refs
 const smartTable = ref(null)
 
@@ -195,6 +197,8 @@ const onXcResizing = (cn: string | undefined, event: any) => {
 
   const size = event.detail.split('px')[0]
   gridViewCols.value[cn].width = `${normalizedWidth(metaColumnById.value[cn], size)}px`
+
+  refreshFillHandle()
 }
 
 const onXcStartResizing = (cn: string | undefined, event: any) => {
@@ -228,13 +232,17 @@ const PREFETCH_THRESHOLD = 40
 const fetchChunk = async (chunkId: number, isInitialLoad = false) => {
   if (chunkStates.value[chunkId]) return
 
+  const offset = chunkId * CHUNK_SIZE
+  const limit = isInitialLoad ? INITIAL_LOAD_SIZE : CHUNK_SIZE
+
+  if (offset >= totalRows.value) {
+    return
+  }
+
   chunkStates.value[chunkId] = 'loading'
   if (isInitialLoad) {
     chunkStates.value[chunkId + 1] = 'loading'
   }
-  const offset = chunkId * CHUNK_SIZE
-  const limit = isInitialLoad ? INITIAL_LOAD_SIZE : CHUNK_SIZE
-
   try {
     const newItems = await loadData({ offset, limit })
     newItems.forEach((item) => cachedRows.value.set(item.rowMeta.rowIndex, item))
@@ -743,6 +751,7 @@ const {
   makeActive,
   selectedRange,
   isFillMode,
+  metaKey,
 } = useMultiSelect(
   meta,
   fields,
@@ -768,7 +777,7 @@ const {
     if (isExpandedCellInputExist()) return
 
     // skip keyboard event handling if there is a drawer / modal
-    if (isDrawerOrModalExist()) {
+    if (isDrawerOrModalExist() || isLinkDropdownExist()) {
       return true
     }
     const cmdOrCtrl = isMac() ? e.metaKey : e.ctrlKey
@@ -1024,8 +1033,8 @@ const isSelectedOnlyAI = computed(() => {
   if (selectedRange.start.col === selectedRange.end.col) {
     const field = fields.value[selectedRange.start.col]
     return {
-      enabled: field.uidt === UITypes.Button && (field?.colOptions as ButtonType)?.type === ButtonActionsType.Ai,
-      disabled: !ncIsArrayIncludes(aiIntegrations.value, (field?.colOptions as ButtonType)?.fk_integration_id, 'id'),
+      enabled: isAIPromptCol(field) || isAiButton(field),
+      disabled: !(field?.colOptions as ButtonType)?.fk_integration_id,
     }
   }
 
@@ -1034,6 +1043,8 @@ const isSelectedOnlyAI = computed(() => {
     disabled: false,
   }
 })
+
+const isAIFillMode = computed(() => metaKey.value && isFeatureEnabled(FEATURE_FLAG.AI_FEATURES))
 
 const generateAIBulk = async () => {
   if (!isSelectedOnlyAI.value.enabled || !meta?.value?.id || !meta.value.columns) return
@@ -1048,9 +1059,7 @@ const generateAIBulk = async () => {
 
   let outputColumnIds = [field.id]
 
-  const isAiButton = field.uidt === UITypes.Button && (field?.colOptions as ButtonType)?.type === ButtonActionsType.Ai
-
-  if (isAiButton) {
+  if (isAiButton(field)) {
     outputColumnIds =
       ncIsString(field.colOptions?.output_column_ids) && field.colOptions.output_column_ids.split(',').length > 0
         ? field.colOptions.output_column_ids.split(',')
@@ -1436,7 +1445,7 @@ const leftOffset = computed(() => {
 const fillHandleTop = ref()
 const fillHandleLeft = ref()
 
-const refreshFillHandle = () => {
+function refreshFillHandle() {
   const rowIndex = isNaN(selectedRange.end.row) ? activeCell.row : selectedRange.end.row
   const colIndex = isNaN(selectedRange.end.col) ? activeCell.col : selectedRange.end.col
   if (rowIndex !== null && colIndex !== null) {
@@ -1509,10 +1518,11 @@ watch(activeCell, (activeCell) => {
   eventBus.emit(SmartsheetStoreEvents.CELL_SELECTED, { rowId, colId: col?.id, val, viewId })
 })
 
-const reloadViewDataHookHandler = async () => {
-  // If the scroll Position is not at the top, scroll to the top
-  // This always loads the first page of data when the view data is reloaded
-  gridWrapper.value?.scrollTo(0, 0)
+const reloadViewDataHookHandler = async (param) => {
+  if (param?.fieldAdd) {
+    gridWrapper.value?.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }
+
   await saveOrUpdateRecords({
     keepNewRecords: true,
   })
@@ -1523,7 +1533,7 @@ const reloadViewDataHookHandler = async () => {
 
   calculateSlices()
 
-  await updateVisibleRows()
+  await Promise.all([loadViewAggregate(), updateVisibleRows()])
 
   temporaryNewRowStore.value.forEach((row, index) => {
     row.rowMeta.rowIndex = totalRows.value + index
@@ -1898,7 +1908,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
                   </template>
                 </th>
                 <th
-                  v-if="fields[0] && fields[0].id"
+                  v-if="fields?.[0]?.id"
                   ref="primaryColHeader"
                   v-xc-ver-resize
                   :data-col="fields[0].id"
@@ -2248,13 +2258,13 @@ watch(vSelectedAllRecords, (selectedAll) => {
                             </span>
                             <div
                               v-else-if="!row.rowMeta?.saving && !row.rowMeta?.isLoading"
-                              class="cursor-pointer flex items-center border-1 border-gray-100 active:ring rounded p-1 hover:(bg-gray-50)"
+                              class="cursor-pointer flex items-center border-1 border-gray-100 active:ring rounded-md p-1 hover:(bg-white border-nc-border-gray-medium)"
                             >
                               <component
-                                :is="iconMap.expand"
+                                :is="iconMap.maximize"
                                 v-if="expandForm"
                                 v-e="['c:row-expand:open']"
-                                class="select-none transform hover:(text-black scale-120) nc-row-expand"
+                                class="select-none transform nc-row-expand opacity-90 w-4 h-4"
                                 @click="expandAndLooseFocus(row, state)"
                               />
                             </div>
@@ -2267,7 +2277,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
                         class="cell relative nc-grid-cell cursor-pointer"
                         :class="{
                           'active': selectRangeMap[`${row.rowMeta.rowIndex}-0`],
-                          'active-cell !after:h-[calc(100%-2px)]':
+                          'active-cell !after:h-[calc(100%-1px)]':
                             (activeCell.row === row.rowMeta.rowIndex && activeCell.col === 0) ||
                             (selectedRange._start?.row === row.rowMeta.rowIndex && selectedRange._start?.col === 0),
                           'nc-required-cell':
@@ -2437,11 +2447,11 @@ watch(vSelectedAllRecords, (selectedAll) => {
               v-show="showFillHandle"
               ref="fillHandle"
               class="nc-fill-handle"
-              :class="
-                (!selectedRange.isEmpty() && selectedRange.end.col !== 0) || (selectedRange.isEmpty() && activeCell.col !== 0)
-                  ? 'z-3'
-                  : 'z-4'
-              "
+              :class="{
+                'z-3': !selectedRange.isEmpty() && selectedRange.end.col !== 0,
+                'z-4': selectedRange.isEmpty() && activeCell.col !== 0,
+                'transition-all !bg-purple-400 !w-[10px] !h-[10px] !mt-[-5px] !ml-[-5px]': isAIFillMode,
+              }"
               :style="{
                 top: `${fillHandleTop}px`,
                 left: `${fillHandleLeft}px`,
@@ -2452,7 +2462,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
         </div>
 
         <template #overlay>
-          <NcMenu class="!rounded !py-0" @click="contextMenu = false">
+          <NcMenu class="!rounded !py-0" variant="small" @click="contextMenu = false">
             <template v-if="!vSelectedAllRecords">
               <NcMenuItem
                 v-if="isEeUI && !contextMenuClosing && !contextMenuTarget && !isDataReadOnly && selectedRows.length"
@@ -2616,16 +2626,17 @@ watch(vSelectedAllRecords, (selectedAll) => {
       </NcDropdown>
     </div>
 
-    <div class="absolute bottom-12 left-2">
+    <div class="absolute bottom-12 left-2" @click.stop>
       <NcDropdown v-if="isAddingEmptyRowAllowed">
-        <div class="flex">
+        <div class="flex shadow-nc-sm rounded-lg">
           <NcButton
             v-if="isMobileMode"
             v-e="[isAddNewRecordGridMode ? 'c:row:add:grid' : 'c:row:add:form']"
             class="nc-grid-add-new-row"
             size="small"
             type="secondary"
-            @click.stop="onNewRecordToFormClick()"
+            :shadow="false"
+            @click="onNewRecordToFormClick()"
           >
             <div class="flex items-center gap-2">
               <GeneralIcon icon="plus" />
@@ -2638,7 +2649,8 @@ watch(vSelectedAllRecords, (selectedAll) => {
             class="!rounded-r-none !border-r-0 nc-grid-add-new-row"
             size="small"
             type="secondary"
-            @click.stop="isAddNewRecordGridMode ? addEmptyRow() : onNewRecordToFormClick()"
+            :shadow="false"
+            @click="isAddNewRecordGridMode ? addEmptyRow() : onNewRecordToFormClick()"
           >
             <div data-testid="nc-pagination-add-record" class="flex items-center gap-2">
               <GeneralIcon icon="plus" />
@@ -2648,13 +2660,19 @@ watch(vSelectedAllRecords, (selectedAll) => {
               <template v-else> {{ $t('activity.newRecord') }} - {{ $t('objects.viewType.form') }} </template>
             </div>
           </NcButton>
-          <NcButton v-if="!isMobileMode" size="small" class="!rounded-l-none nc-add-record-more-info" type="secondary">
+          <NcButton
+            v-if="!isMobileMode"
+            size="small"
+            class="!rounded-l-none nc-add-record-more-info"
+            type="secondary"
+            :shadow="false"
+          >
             <GeneralIcon icon="arrowUp" />
           </NcButton>
         </div>
 
         <template #overlay>
-          <NcMenu>
+          <NcMenu variant="small">
             <NcMenuItem v-e="['c:row:add:grid']" class="nc-new-record-with-grid group" @click="onNewRecordToGridClick">
               <div class="flex flex-row items-center justify-start gap-x-3">
                 <component :is="viewIcons[ViewTypes.GRID]?.icon" class="nc-view-icon text-inherit" />
@@ -2665,7 +2683,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
             </NcMenuItem>
             <NcMenuItem v-e="['c:row:add:form']" class="nc-new-record-with-form group" @click="onNewRecordToFormClick">
               <div class="flex flex-row items-center justify-start gap-x-3">
-                <GeneralIcon class="h-4.5 w-4.5" icon="article" />
+                <component :is="viewIcons[ViewTypes.FORM]?.icon" class="nc-view-icon text-inherit" />
                 {{ $t('activity.newRecord') }} - {{ $t('objects.viewType.form') }}
               </div>
 
@@ -2726,10 +2744,18 @@ watch(vSelectedAllRecords, (selectedAll) => {
 
     &.align-top {
       @apply py-2;
+
+      &:has(.nc-cell.nc-cell-longtext textarea) {
+        @apply py-0 pr-0;
+      }
     }
 
     &.align-middle {
       @apply py-0;
+
+      &:has(.nc-cell.nc-cell-longtext textarea) {
+        @apply pr-0;
+      }
     }
 
     & > div {
@@ -2755,7 +2781,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
       .nc-cell-field,
       input,
       textarea {
-        @apply !text-small !p-0 m-0;
+        @apply !text-small !pl-0 !py-0 m-0;
       }
 
       &:not(.nc-display-value-cell) {
@@ -2774,7 +2800,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
       a.nc-cell-field-link,
       input,
       textarea {
-        @apply !p-0 m-0;
+        @apply !pl-0 !py-0 m-0;
       }
 
       a.nc-cell-field-link {
@@ -2788,7 +2814,7 @@ watch(vSelectedAllRecords, (selectedAll) => {
         @apply leading-[18px];
 
         textarea {
-          @apply pr-2;
+          @apply pr-8 !py-2;
         }
       }
 
@@ -2822,12 +2848,17 @@ watch(vSelectedAllRecords, (selectedAll) => {
         .ant-select-selector {
           @apply !border-none flex-nowrap pr-4.5;
         }
-        .ant-select-arrow {
+        .ant-select-arrow,
+        .ant-select-clear {
           @apply right-[3px];
         }
       }
       .ant-select-selection-search-input {
         @apply !h-[23px];
+      }
+
+      .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+        @apply !h-auto;
       }
     }
   }

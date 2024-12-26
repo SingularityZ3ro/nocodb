@@ -69,24 +69,72 @@ const localState = computed({
   },
   set(val?: dayjs.Dayjs) {
     isClearedInputMode.value = false
-    if (!val) {
-      emit('update:modelValue', null)
+
+    saveChanges(val)
+  },
+})
+
+const savingValue = ref()
+
+function saveChanges(val?: dayjs.Dayjs) {
+  if (!val) {
+    if (savingValue.value === val) {
       return
     }
 
-    if (val.isValid()) {
-      const time = val.format('HH:mm')
-      const date = dayjs(`1999-01-01 ${time}:00`)
-      emit('update:modelValue', date.format(dateFormat))
+    savingValue.value = null
+
+    emit('update:modelValue', null)
+    return
+  }
+
+  if (val.isValid()) {
+    const time = val.format('HH:mm')
+    const date = dayjs(`1999-01-01 ${time}:00`)
+
+    const formattedValue = date.format(dateFormat)
+
+    if (savingValue.value === formattedValue) {
+      return
     }
-  },
-})
+
+    savingValue.value = formattedValue
+    emit('update:modelValue', date.format(dateFormat))
+  }
+}
 
 watchEffect(() => {
   if (localState.value) {
     tempDate.value = localState.value
   }
 })
+
+const handleUpdateValue = (e: Event, save = false) => {
+  let targetValue = (e.target as HTMLInputElement).value
+
+  if (!targetValue) {
+    tempDate.value = undefined
+    return
+  }
+
+  targetValue = parseProp(column.value.meta).is12hrFormat
+    ? targetValue
+        .trim()
+        .toUpperCase()
+        .replace(/(AM|PM)$/, ' $1')
+        .replace(/\s+/g, ' ')
+    : targetValue.trim()
+
+  const parsedDate = dayjs(targetValue, parseProp(column.value.meta).is12hrFormat ? 'hh:mm A' : 'HH:mm')
+
+  if (parsedDate.isValid()) {
+    tempDate.value = dayjs(`${dayjs().format('YYYY-MM-DD')} ${parsedDate.format('HH:mm')}`)
+
+    if (save) {
+      saveChanges(tempDate.value)
+    }
+  }
+}
 
 const randomClass = `picker_${Math.floor(Math.random() * 99999)}`
 
@@ -97,6 +145,8 @@ onClickOutside(datePickerRef, (e) => {
 })
 
 const onBlur = (e) => {
+  handleUpdateValue(e, true)
+
   if (
     (e?.relatedTarget as HTMLElement)?.closest(`.${randomClass}, .nc-${randomClass}`) ||
     (e?.target as HTMLElement)?.closest(`.${randomClass}, .nc-${randomClass}`)
@@ -245,29 +295,6 @@ useEventListener(document, 'keydown', (e: KeyboardEvent) => {
     open.value = true
   }
 })
-
-const handleUpdateValue = (e: Event) => {
-  let targetValue = (e.target as HTMLInputElement).value
-
-  if (!targetValue) {
-    tempDate.value = undefined
-    return
-  }
-
-  targetValue = parseProp(column.value.meta).is12hrFormat
-    ? targetValue
-        .trim()
-        .toUpperCase()
-        .replace(/(AM|PM)$/, ' $1')
-        .replace(/\s+/g, ' ')
-    : targetValue.trim()
-
-  const parsedDate = dayjs(targetValue, parseProp(column.value.meta).is12hrFormat ? 'hh:mm A' : 'HH:mm')
-
-  if (parsedDate.isValid()) {
-    tempDate.value = dayjs(`${dayjs().format('YYYY-MM-DD')} ${parsedDate.format('HH:mm')}`)
-  }
-}
 
 function handleSelectTime(value?: dayjs.Dayjs) {
   if (!value) {

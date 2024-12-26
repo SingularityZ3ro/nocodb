@@ -142,7 +142,7 @@ const columnsToRender = computed(() => {
 
           <div v-if="columnsToRender.length > 0" class="flex ml-[-0.25rem] sm:flex-row xs:(flex-col mt-2) gap-4 min-h-5">
             <div v-for="column in columnsToRender" :key="column.id" class="sm:(w-1/3 max-w-1/3 overflow-hidden)">
-              <div v-if="!isRowEmpty({ row }, column)" class="flex flex-col gap-[-1]">
+              <div v-if="!isRowEmpty(currentRow, column)" class="flex flex-col gap-[-1]">
                 <NcTooltip class="z-10 flex" placement="bottomLeft" :arrow-point-at-center="false">
                   <template #title>
                     <LazySmartsheetHeaderVirtualCell
@@ -260,7 +260,8 @@ const columnsToRender = computed(() => {
       .ant-select-selector {
         @apply !border-none flex-nowrap pr-4.5;
       }
-      .ant-select-arrow {
+      .ant-select-arrow,
+      .ant-select-clear {
         @apply right-[3px];
       }
     }

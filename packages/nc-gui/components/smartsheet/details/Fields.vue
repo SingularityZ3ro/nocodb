@@ -4,6 +4,7 @@ import { message } from 'ant-design-vue'
 import {
   ButtonActionsType,
   UITypes,
+  isAIPromptCol,
   isLinksOrLTAR,
   isSystemColumn,
   isVirtualCol,
@@ -105,8 +106,6 @@ const visibilityOps = ref<fieldsVisibilityOps[]>([])
 
 const fieldsListWrapperDomRef = ref<HTMLElement>()
 
-const { copy } = useClipboard()
-
 const { fields: viewFields, toggleFieldVisibility, loadViewColumns, isViewColumnsLoading } = useViewColumnsOrThrow()
 
 const loading = ref(false)
@@ -114,8 +113,6 @@ const loading = ref(false)
 const columnsHash = ref<string>()
 
 const newFields = ref<TableExplorerColumn[]>([])
-
-const isFieldIdCopied = ref(false)
 
 const compareCols = (a?: TableExplorerColumn, b?: TableExplorerColumn) => {
   if (a?.id && b?.id) {
@@ -417,6 +414,7 @@ const onFieldUpdate = (state: TableExplorerColumn, skipLinkChecks = false) => {
   const diffs = Object.fromEntries(
     Object.entries(pdiffs).filter(([_, value]) => value !== undefined),
   ) as Partial<TableExplorerColumn>
+
   if (
     Object.keys(diffs).length === 0 ||
     // skip custom prop since it's only used for custom LTAR links
@@ -642,9 +640,20 @@ const isColumnValid = (column: TableExplorerColumn) => {
     }
   }
 
-  if (column.uidt === UITypes.Button && isNew) {
-    if (column.type === ButtonActionsType.Url && !column.formula_raw) return false
-    if (column.type === ButtonActionsType.Webhook && !column.fk_webhook_id) return false
+  if (column.uidt === UITypes.Button) {
+    if (isNew) {
+      if (column.type === ButtonActionsType.Url && !column.formula_raw) return false
+      if (column.type === ButtonActionsType.Webhook && !column.fk_webhook_id) return false
+    }
+
+    if (column.type === ButtonActionsType.Ai) {
+      return !(
+        !column.fk_integration_id ||
+        !column.formula_raw?.trim() ||
+        !column.output_column_ids?.length ||
+        !column.output_column_ids?.split(',')?.length
+      )
+    }
   }
 
   return true
@@ -703,6 +712,11 @@ function updateDefaultColumnValues(column: TableExplorerColumn) {
       column.fk_webhook_id = colOptions?.fk_webhook_id
       column.icon = colOptions?.icon
       column.formula_raw = column.colOptions?.formula_raw
+
+      if (column.type === ButtonActionsType.Ai) {
+        column.output_column_ids = colOptions?.output_column_ids
+        column.fk_integration_id = colOptions?.fk_integration_id
+      }
     } else {
       column.type = column?.type || ButtonActionsType.Url
 
@@ -719,6 +733,16 @@ function updateDefaultColumnValues(column: TableExplorerColumn) {
       }
 
       column.formula_raw = column.formula_raw || ''
+    }
+  }
+
+  if (column.uidt === UITypes.LongText && isAIPromptCol(column)) {
+    if (column?.id) {
+      const colOptions = column.colOptions as Record<string, any>
+
+      column.prompt_raw = colOptions?.prompt_raw
+    } else {
+      column.prompt_raw = column.prompt_raw || ''
     }
   }
 
@@ -1033,12 +1057,6 @@ onKeyDown('ArrowRight', () => {
   }
 })
 
-const onClickCopyFieldUrl = async (field: ColumnType) => {
-  await copy(field.id!)
-
-  isFieldIdCopied.value = true
-}
-
 const keys = useMagicKeys()
 
 whenever(keys.meta_s, () => {
@@ -1074,12 +1092,6 @@ onMounted(async () => {
 
   metaToLocal()
 })
-
-const onFieldOptionUpdate = () => {
-  setTimeout(() => {
-    isFieldIdCopied.value = false
-  }, 200)
-}
 
 watch(
   () => activeField.value?.temp_id,
@@ -1222,7 +1234,7 @@ watch(activeAiTab, (newValue) => {
           </a-input>
           <div class="flex gap-2">
             <template v-if="isFeatureEnabled(FEATURE_FLAG.AI_FEATURES)">
-              <div class="nc-fields-add-new-field-btn-wrapper shadow-sm">
+              <div class="nc-fields-add-new-field-btn-wrapper rounded-lg shadow-nc-sm">
                 <NcTooltip :disabled="isLocked">
                   <template #title> {{ `${renderAltOrOptlKey()} + C` }} </template>
                   <NcButton
@@ -1260,7 +1272,7 @@ watch(activeAiTab, (newValue) => {
                       </template>
                     </NcButton>
                     <template #overlay>
-                      <NcMenu>
+                      <NcMenu variant="medium">
                         <NcMenuItem class="!children:w-full !text-nc-content-purple-dark" @click="toggleAiMode()">
                           <component :is="getUIDTIcon(UITypes.SingleLineText)" class="flex-none w-3.5 h-3.5" />
                           {{ $t('labels.autoSuggestFields') }}
@@ -1749,33 +1761,19 @@ watch(activeAiTab, (newValue) => {
                         </NcButton>
 
                         <template #overlay>
-                          <NcMenu style="padding-top: 0.45rem !important">
+                          <NcMenu variant="small" class="!mt-1 !min-w-55">
                             <template v-if="fieldStatus(field) !== 'add'">
-                              <NcTooltip placement="top">
-                                <template #title>{{ $t('msg.clickToCopyFieldId') }}</template>
-
-                                <div
-                                  class="flex flex-row gap-2 w-[calc(100%_-_12px)] p-2 mx-1.5 rounded-md justify-between items-center group hover:bg-gray-100 cursor-pointer"
-                                  data-testid="nc-field-item-action-copy-id"
-                                  @click="onClickCopyFieldUrl(field)"
-                                >
-                                  <div
-                                    class="flex flex-row text-gray-500 text-xs items-baseline gap-x-1 font-bold"
-                                    data-testid="nc-field-item-id"
-                                  >
-                                    {{
-                                      $t('labels.idColon', {
-                                        id: field.id,
-                                      })
-                                    }}
-                                  </div>
-                                  <NcButton size="xsmall" type="secondary" class="!group-hover:bg-gray-100">
-                                    <GeneralIcon v-if="isFieldIdCopied" icon="check" />
-                                    <GeneralIcon v-else icon="copy" />
-                                  </NcButton>
-                                </div>
-                              </NcTooltip>
-                              <a-menu-divider v-if="!isLocked" class="my-1.5" />
+                              <NcMenuItemCopyId
+                                :id="field.id"
+                                data-testid="nc-field-item-action-copy-id"
+                                :tooltip="$t('msg.clickToCopyFieldId')"
+                                :label="
+                                  $t('labels.idColon', {
+                                    id: field.id,
+                                  })
+                                "
+                              />
+                              <NcDivider v-if="!isLocked" />
                             </template>
 
                             <template v-if="!isLocked">
@@ -1805,7 +1803,7 @@ watch(activeAiTab, (newValue) => {
                                 <span>{{ $t('general.insertBelow') }}</span>
                               </NcMenuItem>
 
-                              <a-menu-divider class="my-1.5" />
+                              <NcDivider />
 
                               <NcMenuItem
                                 key="table-explorer-delete"
@@ -1935,31 +1933,17 @@ watch(activeAiTab, (newValue) => {
                         </NcButton>
 
                         <template #overlay>
-                          <NcMenu>
-                            <NcTooltip placement="top">
-                              <template #title>{{ $t('msg.clickToCopyFieldId') }}</template>
-
-                              <div
-                                class="flex flex-row gap-2 w-[calc(100%_-_12px)] p-2 mx-1.5 rounded-md justify-between items-center group hover:bg-gray-100 cursor-pointer"
-                                data-testid="nc-field-item-action-copy-id"
-                                @click="onClickCopyFieldUrl(displayColumn)"
-                              >
-                                <div
-                                  class="flex flex-row text-gray-500 text-xs items-baseline gap-x-1 font-bold"
-                                  data-testid="nc-field-item-id"
-                                >
-                                  {{
-                                    $t('labels.idColon', {
-                                      id: displayColumn.id,
-                                    })
-                                  }}
-                                </div>
-                                <NcButton size="xsmall" type="secondary" class="!group-hover:bg-gray-100">
-                                  <GeneralIcon v-if="isFieldIdCopied" icon="check" />
-                                  <GeneralIcon v-else icon="copy" />
-                                </NcButton>
-                              </div>
-                            </NcTooltip>
+                          <NcMenu variant="small" class="!min-w-55">
+                            <NcMenuItemCopyId
+                              :id="displayColumn.id"
+                              data-testid="nc-field-item-action-copy-id"
+                              :tooltip="$t('msg.clickToCopyFieldId')"
+                              :label="
+                                $t('labels.idColon', {
+                                  id: displayColumn.id,
+                                })
+                              "
+                            />
                           </NcMenu>
                         </template>
                       </NcDropdown>
@@ -2022,10 +2006,6 @@ watch(activeAiTab, (newValue) => {
 
 .nc-dropdown-table-explorer-display-column {
   @apply !overflow-hidden;
-}
-
-.nc-dropdown-table-explorer-display-column > div > ul.ant-dropdown-menu.nc-menu {
-  @apply !py-1.5;
 }
 </style>
 

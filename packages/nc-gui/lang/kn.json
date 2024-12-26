@@ -154,6 +154,7 @@
     "details": "ವಿವರಗಳು",
     "skip": "ಬಿಟ್ಟುಬಿಡಿ",
     "code": "ಕೋಡ್",
+    "codeBlock": "Code Block",
     "duplicate": "ನಕಲು",
     "duplicating": "ನಕಲಿಸುತ್ತಿದೆ",
     "duplicateEntity": "ನಕಲು {entity}",
@@ -652,6 +653,8 @@
     "lockedByUser": "Locked by {user}"
   },
   "labels": {
+    "enableSnowFall": "Enable Snowfall",
+    "disableSnowFall": "Disable Snowfall",
     "snapshotCreationFailed": "Snapshot creation failed",
     "snapshotCreationFailedDescription": "Failed to create your base snapshot. Try again later.",
     "snapshotCooldownDescription": "Snapshots can only be taken three hours apart.",
@@ -804,7 +807,7 @@
     "icon": "ಚಿಹ್ನೆ",
     "max": "ಅತ್ಯಂತ ಹೆಚ್ಚು",
     "enableRichText": "ಸಮೃದ್ಧ ಪಠ್ಯ ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ",
-    "idColon": "ಐಡಿ: {id}",
+    "idColon": "Id: {id}",
     "copiedRecordURL": "ನಕಲಿ ದಾಖಲೆ URL",
     "copyRecordURL": "ದಾಖಲೆ URL ನಕಲು",
     "duplicateRecord": "ನಕಲಿ ದಾಖಲೆ",
@@ -890,7 +893,7 @@
     "lengthValue": "ಉದ್ದ/ ಮೌಲ್ಯ",
     "dbType": "ಡೇಟಾಬೇಸ್ ಪ್ರಕಾರ",
     "servername": "ಸರ್ವರ್‌ನಾಮ / ಹೋಸ್ಟ್‌ಅಡ್ರ್",
-    "sqliteFile": "SQLite ಫೈಲ್ ಪಥ",
+    "sqliteFile": "SQLite file path",
     "hostAddress": "ಹೋಸ್ಟ್ ವಿಳಾಸ",
     "port": "ಪೋರ್ಟ್ ಸಂಖ್ಯೆ",
     "username": "ಬಳಕೆದಾರ ಹೆಸರು",
@@ -954,7 +957,7 @@
       "joinCommunity": "NocoDB ಸಮುದಾಯಕ್ಕೆ ಸೇರು",
       "joinReddit": "/r/NocoDB",
       "followNocodb": "NocoDB ಅನ್ನು ಅನುಸರಿಸಿ",
-      "communityTranslated": "(ಸಮುದಾಯ/AI ಅನುವಾದಿತ)"
+      "communityTranslated": "(Community/AI Translated)"
     },
     "twitter": "Twitter",
     "docReference": "ಡಾಕ್ಯುಮೆಂಟ್ ರೆಫರೆನ್ಸ್",
@@ -1037,7 +1040,7 @@
     "appearanceSettings": "ಪ್ರದರ್ಶನದ ಸೆಟ್ಟಿಂಗ್ಗಳು",
     "backgroundColor": "ಹಿನ್ನಲೆ ಬಣ್ಣ",
     "hideNocodbBranding": "NocoDB ಬ್ರ್ಯಾಂಡಿಂಗ್ ಅನ್ನು ಮುಚ್ಚು",
-    "showOnConditions": "ಶರತ್ತುಗಳಲ್ಲಿ ತೋರಿಸಿ",
+    "showOnConditions": "Show on conditions",
     "showFieldOnConditionsMet": "ಗುಣಲಕ್ಷಣಗಳು ಅತಿಂಟರಿತವಾಗಿದಾಗ ಮಾತ್ರ ಕ್ಷೇತ್ರ ಪ್ರದರ್ಶಿಸು",
     "limitOptions": "ಆಯ್ಕೆಗಳ ಮಿತಿ",
     "limitOptionsSubtext": "ಲಭ್ಯವಿರುವ ಆಯ್ಕೆಗಳು ಆಯ್ಕೆಮಾಡುವ ಮೂಲಕ ಬಳಕೆದಾರರಿಗೆ ಕಾಣಿಸಬಹುದಾದ ಆಯ್ಕೆಗಳನ್ನು ಮಿತಿಗೊಳಿಸಿ",
@@ -1087,7 +1090,7 @@
     "toggleSidebar": "ಪಕ್ಕದ ಪಟ್ಟಿ ಪುನಃ ತಿರುಗಿಸು",
     "addEndDate": "ಕೊನೆಯ ದಿನದಾಂಕವನ್ನು ಸೇರಿಸಿ",
     "endDate": "End Date",
-    "withEndDate": "ಕೊನೆಯ ದಿನಾಂಕದೊಂದಿಗೆ",
+    "withEndDate": "With end date",
     "calendar": "ಕ್ಯಾಲೆಂಡರ್",
     "viewSettings": "ಸಂಯೋಜನೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
     "googleOAuth": "ಗೂಗಲ್ ಪೊಲೀಸ್",
@@ -1380,7 +1383,8 @@
     "autoSuggestSelectOptions": "Auto suggest options based on field name and existing fields",
     "aiIntegrationReConfigure": "AI integration has been removed, re-configure from field edit modal to use NocoAI features",
     "aiIntegrationAddAndReConfigure": "AI integration has been removed, re-add and re-configure from field edit modal to use NocoAI features",
-    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI"
+    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI",
+    "sourceDataIsReadonly": "Source data is readonly"
   },
   "placeholder": {
     "searchIcons": "ಐಕಾನ್‌ಗಳನ್ನು ಹುಡುಕಿ",
@@ -1640,7 +1644,7 @@
       "apiOptions": "ಮೂಲವನ್ನು ಮೂಲಕ ಪ್ರವೇಶಿಸಿ",
       "submitAnotherForm": "'ಮತ್ತೊಂದು ಪಠ್ಯ ಸಲ್ಲಿಸಿ' ಬಟನ್ ಅನ್ನು ತೋರಿಸಿ",
       "showBlankForm": "5 ಸೆಕೆಂಡುಗಳ ನಂತರ ಖಾಲಿ ಫಾರ್ಮ್ ತೋರಿಸಿ",
-      "emailForm": "ಇಮೇಲ್ ಪ್ರತಿಕ್ರಿಯೆಗಳು",
+      "emailForm": "Email responses to",
       "showSysFields": "ಸಿಸ್ಟಮ್ ಕ್ಷೇತ್ರಗಳನ್ನು ತೋರಿಸಿ",
       "filterAutoApply": "ಸ್ವಯಂಚಾಲಿತ ಅನ್ವಯ",
       "formDisplayMessage": "ಸಂದೇಶವನ್ನು ಪ್ರದರ್ಶಿಸಿ",
@@ -1834,6 +1838,7 @@
       "failedToLoadList": "ಪಟ್ಟಿ ಲೋಡ್ ಮಾಡುವುದು ವಿಫಲವಾಗಿದೆ",
       "failedToLoadChildrenList": "ಮಕ್ಕಳ ಪಟ್ಟಿಯನ್ನು ಲೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
       "deleteFailed": "ಅಳಿಸಲು ವಿಫಲವಾಯಿತು",
+      "failedToDuplicateTable": "Failed to duplicate table",
       "unlinkFailed": "ಅನ್‌ಲಿಂಕ್ ವಿಫಲವಾಯಿತು",
       "rowUpdateFailed": "ರೆಕಾರ್ಡ್ ಪರಿಷ್ಕರಣೆ ವಿಫಲವಾಗಿದೆ",
       "deleteRowFailed": "ರೆಕಾರ್ಡ್ ಅಳಿಸಲು ವಿಫಲವಾಗಿದೆ",

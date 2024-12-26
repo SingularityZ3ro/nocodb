@@ -16,8 +16,6 @@ const defaultAuditLogsQuery = {
 export const useWorkspace = defineStore('workspaceStore', () => {
   const basesStore = useBases()
 
-  const { isUIAllowed } = useRoles()
-
   const collaborators = ref<any[] | null>()
 
   const allCollaborators = ref<any[] | null>()
@@ -259,38 +257,7 @@ export const useWorkspace = defineStore('workspaceStore', () => {
 
   const auditPaginationData = ref<PaginatedType>({ page: 1, pageSize: 25, totalRows: 0 })
 
-  const loadAudits = async (
-    _workspaceId?: string,
-    page: number = auditPaginationData.value.page!,
-    limit: number = auditPaginationData.value.pageSize!,
-  ) => {
-    try {
-      if (limit * (page - 1) > auditPaginationData.value.totalRows!) {
-        auditPaginationData.value.page = 1
-        page = 1
-      }
-
-      const { list, pageInfo } = isUIAllowed('workspaceAuditList')
-        ? await $api.utils.projectAuditList({
-            offset: limit * (page - 1),
-            limit,
-            ...auditLogsQuery.value,
-          })
-        : await $api.base.auditList(auditLogsQuery.value.baseId, {
-            offset: limit * (page - 1),
-            limit,
-            ...auditLogsQuery.value,
-          })
-
-      audits.value = list
-      auditPaginationData.value.totalRows = pageInfo.totalRows ?? 0
-    } catch (e) {
-      message.error(await extractSdkResponseErrorMsg(e))
-      audits.value = []
-      auditPaginationData.value.totalRows = 0
-      auditPaginationData.value.page = 1
-    }
-  }
+  const loadAudits = async (..._args: any) => {}
 
   function setLoadingState(isLoading = false) {
     isWorkspaceLoading.value = isLoading

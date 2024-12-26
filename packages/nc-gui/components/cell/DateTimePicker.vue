@@ -121,20 +121,44 @@ const localState = computed({
   },
   set(val?: dayjs.Dayjs) {
     isClearedInputMode.value = false
-    if (!val) {
-      emit('update:modelValue', null)
 
+    saveChanges(val)
+  },
+})
+
+const savingValue = ref()
+
+function saveChanges(val?: dayjs.Dayjs, saveOnChange = false) {
+  if (!val) {
+    if (savingValue.value === null) {
       return
     }
 
-    if (val.isValid()) {
-      // setting localModelValue to cater NOW function in date picker
-      localModelValue = dayjs(val)
-      // send the payload in UTC format
-      emit('update:modelValue', dayjs(val).utc().format('YYYY-MM-DD HH:mm:ssZ'))
+    savingValue.value = null
+    emit('update:modelValue', null)
+
+    return
+  }
+
+  if (saveOnChange && localState.value?.isSame(val)) {
+    return
+  }
+
+  if (val.isValid()) {
+    // setting localModelValue to cater NOW function in date picker
+    localModelValue = dayjs(val)
+    // send the payload in UTC format
+
+    const formattedValue = dayjs(val).utc().format('YYYY-MM-DD HH:mm:ssZ')
+
+    if (savingValue.value === formattedValue) {
+      return
     }
-  },
-})
+
+    savingValue.value = formattedValue
+    emit('update:modelValue', formattedValue)
+  }
+}
 
 watchEffect(() => {
   if (localState.value) {
@@ -152,6 +176,59 @@ const isOpen = computed(() => {
   return readOnly.value || (localState.value && isPk) ? false : open.value && (active.value || editable.value)
 })
 
+const handleUpdateValue = (e: Event, _isDatePicker: boolean, save = false) => {
+  let targetValue = (e.target as HTMLInputElement).value
+
+  if (_isDatePicker) {
+    if (!targetValue) {
+      tempDate.value = undefined
+      return
+    }
+
+    const date = dayjs(targetValue, dateFormat.value)
+
+    if (date.isValid()) {
+      if (localState.value) {
+        tempDate.value = dayjs(`${date.format('YYYY-MM-DD')} ${localState.value.format(timeFormat.value)}`)
+      } else {
+        tempDate.value = date
+      }
+
+      if (save) {
+        saveChanges(tempDate.value, true)
+      }
+    }
+  }
+
+  if (!_isDatePicker) {
+    if (!targetValue) {
+      tempDate.value = dayjs(dayjs().format('YYYY-MM-DD'))
+      return
+    }
+
+    targetValue = parseProp(column.value.meta).is12hrFormat
+      ? targetValue
+          .trim()
+          .toUpperCase()
+          .replace(/(AM|PM)$/, ' $1')
+          .replace(/\s+/g, ' ')
+      : targetValue.trim()
+
+    const parsedDate = dayjs(
+      targetValue,
+      parseProp(column.value.meta).is12hrFormat ? timeFormatsObj[timeFormat.value] : timeFormat.value,
+    )
+
+    if (parsedDate.isValid()) {
+      tempDate.value = dayjs(`${(tempDate.value ?? dayjs()).format('YYYY-MM-DD')} ${parsedDate.format(timeFormat.value)}`)
+
+      if (save) {
+        saveChanges(tempDate.value, true)
+      }
+    }
+  }
+}
+
 const randomClass = `picker_${Math.floor(Math.random() * 99999)}`
 
 onClickOutside(datePickerRef, (e) => {
@@ -165,6 +242,10 @@ onClickOutside(datePickerRef, (e) => {
 const onFocus = (_isDatePicker: boolean) => {
   isDatePicker.value = _isDatePicker
   open.value = true
+}
+
+const onBlur = (e: Event, _isDatePicker: boolean) => {
+  handleUpdateValue(e, _isDatePicker, true)
 }
 
 watch(
@@ -324,51 +405,6 @@ watch(editable, (nextValue) => {
   }
 })
 
-const handleUpdateValue = (e: Event, _isDatePicker: boolean) => {
-  let targetValue = (e.target as HTMLInputElement).value
-
-  if (_isDatePicker) {
-    if (!targetValue) {
-      tempDate.value = undefined
-      return
-    }
-
-    const date = dayjs(targetValue, dateFormat.value)
-
-    if (date.isValid()) {
-      if (localState.value) {
-        tempDate.value = dayjs(`${date.format('YYYY-MM-DD')} ${localState.value.format(timeFormat.value)}`)
-      } else {
-        tempDate.value = date
-      }
-    }
-  }
-
-  if (!_isDatePicker) {
-    if (!targetValue) {
-      tempDate.value = dayjs(dayjs().format('YYYY-MM-DD'))
-      return
-    }
-
-    targetValue = parseProp(column.value.meta).is12hrFormat
-      ? targetValue
-          .trim()
-          .toUpperCase()
-          .replace(/(AM|PM)$/, ' $1')
-          .replace(/\s+/g, ' ')
-      : targetValue.trim()
-
-    const parsedDate = dayjs(
-      targetValue,
-      parseProp(column.value.meta).is12hrFormat ? timeFormatsObj[timeFormat.value] : timeFormat.value,
-    )
-
-    if (parsedDate.isValid()) {
-      tempDate.value = dayjs(`${(tempDate.value ?? dayjs()).format('YYYY-MM-DD')} ${parsedDate.format(timeFormat.value)}`)
-    }
-  }
-}
-
 function handleSelectDate(value?: dayjs.Dayjs) {
   if (value && localState.value) {
     const dateTime = dayjs(`${value.format('YYYY-MM-DD')} ${localState.value.format(timeFormat.value)}`)
@@ -460,6 +496,7 @@ const currentDate = ($event) => {
             class="nc-date-input w-full !truncate border-transparent outline-none !text-current !bg-transparent !focus:(border-none outline-none ring-transparent)"
             :readonly="!!isMobileMode || isColDisabled"
             @focus="onFocus(true)"
+            @blur="onBlur($event, true)"
             @keydown="handleKeydown($event, isOpen, true)"
             @mouseup.stop
             @mousedown.stop
@@ -486,6 +523,7 @@ const currentDate = ($event) => {
             class="nc-time-input w-full !truncate border-transparent outline-none !text-current !bg-transparent !focus:(border-none outline-none ring-transparent)"
             :readonly="!!isMobileMode || isColDisabled"
             @focus="onFocus(false)"
+            @blur="onBlur($event, false)"
             @keydown="handleKeydown($event, open)"
             @mouseup.stop
             @mousedown.stop

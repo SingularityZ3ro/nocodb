@@ -20,8 +20,6 @@ const {
   setDefaultIntegration,
 } = useIntegrationStore()
 
-const { loadAiIntegrations } = useNocoAi()
-
 const { $api, $e } = useNuxtApp()
 
 const { allCollaborators } = storeToRefs(useWorkspace())
@@ -163,10 +161,6 @@ const onDeleteConfirm = async () => {
         ...(base || {}),
         sources: [...base.sources.filter((s) => s.id !== source.id)],
       })
-    }
-
-    if (toBeDeletedIntegration.value?.type && toBeDeletedIntegration.value.type === IntegrationCategoryType.AI) {
-      loadAiIntegrations()
     }
   }
 }
@@ -526,7 +520,7 @@ onKeyStroke('ArrowDown', onDown)
                         <GeneralIcon icon="threeDotVertical" />
                       </NcButton>
                       <template #overlay>
-                        <NcMenu>
+                        <NcMenu variant="small">
                           <NcMenuItem
                             v-if="integration.type && integrationCategoryNeedDefault(integration.type) && !integration.is_default"
                             @click="setDefaultIntegration(integration)"

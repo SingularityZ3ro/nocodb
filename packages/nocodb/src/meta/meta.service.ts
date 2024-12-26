@@ -13,6 +13,7 @@ import { XKnex } from '~/db/CustomKnex';
 import { NcConfig } from '~/utils/nc-config';
 import { MetaTable, RootScopes, RootScopeTables } from '~/utils/globals';
 import { NcError } from '~/helpers/catchError';
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -126,7 +127,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',
@@ -140,6 +141,7 @@ export class MetaService {
       created_at: this.now(),
       updated_at: this.now(),
     });
+
     return insertObj;
   }
 
@@ -185,7 +187,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',
@@ -376,7 +378,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',
@@ -449,7 +451,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',
@@ -532,7 +534,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',
@@ -606,7 +608,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',
@@ -667,7 +669,7 @@ export class MetaService {
         });
       }
     } else {
-      if (!base_id && base_id !== RootScopes.WORKSPACE) {
+      if (!base_id) {
         NcError.metaError({
           message: 'Base ID is required',
           sql: '',

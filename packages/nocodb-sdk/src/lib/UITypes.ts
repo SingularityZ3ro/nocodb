@@ -1,6 +1,7 @@
 import { ColumnReqType, ColumnType, TableType } from './Api';
 import { FormulaDataTypes } from './formulaHelpers';
-import { RelationTypes } from '~/lib/globals';
+import { LongTextAiMetaProp, RelationTypes } from '~/lib/globals';
+import { ncParseProp, parseHelper } from './helperFunctions';
 
 enum UITypes {
   ID = 'ID',
@@ -44,12 +45,14 @@ enum UITypes {
   User = 'User',
   CreatedBy = 'CreatedBy',
   LastModifiedBy = 'LastModifiedBy',
+  Order = 'Order',
 }
 
 export const UITypesName = {
   [UITypes.ID]: 'ID',
   [UITypes.LinkToAnotherRecord]: 'Link to another record',
   [UITypes.ForeignKey]: 'Foreign key',
+  [UITypes.Order]: 'Order',
   [UITypes.Lookup]: 'Lookup',
   [UITypes.SingleLineText]: 'Single line text',
   [UITypes.LongText]: 'Long text',
@@ -90,6 +93,38 @@ export const UITypesName = {
   [UITypes.CreatedBy]: 'Created by',
   [UITypes.LastModifiedBy]: 'Last modified by',
   AIButton: 'AI Button',
+  AIPrompt: 'AI Prompt',
+};
+
+export const columnTypeName = (column?: ColumnType) => {
+  if (!column) return '';
+
+  switch (column.uidt) {
+    case UITypes.LongText: {
+      if (ncParseProp(column.meta)?.richMode) {
+        return UITypesName.RichText;
+      }
+
+      if (ncParseProp(column.meta)[LongTextAiMetaProp]) {
+        return UITypesName.AIPrompt;
+      }
+
+      return UITypesName[column.uidt];
+    }
+    case UITypes.Button: {
+      if (
+        column.uidt === UITypes.Button &&
+        (column?.colOptions as any)?.type === 'ai'
+      ) {
+        return UITypesName.AIButton;
+      }
+
+      return UITypesName[column.uidt];
+    }
+    default: {
+      return column.uidt ? UITypesName[column.uidt] : '';
+    }
+  }
 };
 
 export const FieldNameFromUITypes: Record<UITypes, string> = {
@@ -134,6 +169,7 @@ export const FieldNameFromUITypes: Record<UITypes, string> = {
   [UITypes.User]: 'User',
   [UITypes.CreatedBy]: 'Created by',
   [UITypes.LastModifiedBy]: 'Last modified by',
+  [UITypes.Order]: 'Order',
 };
 
 export const numericUITypes = [
@@ -186,6 +222,13 @@ export function isVirtualCol(
   ].includes(<UITypes>(typeof col === 'object' ? col?.uidt : col));
 }
 
+export function isAIPromptCol(col: ColumnReqType | ColumnType) {
+  return (
+    col.uidt === UITypes.LongText &&
+    parseHelper((col as any)?.meta)?.[LongTextAiMetaProp]
+  );
+}
+
 export function isCreatedOrLastModifiedTimeCol(
   col:
     | UITypes
@@ -210,6 +253,18 @@ export function isCreatedOrLastModifiedByCol(
   );
 }
 
+export function isOrderCol(
+  col:
+    | UITypes
+    | { readonly uidt: UITypes | string }
+    | ColumnReqType
+    | ColumnType
+) {
+  return [UITypes.Order].includes(
+    <UITypes>(typeof col === 'object' ? col?.uidt : col)
+  );
+}
+
 export function isHiddenCol(
   col: (ColumnReqType | ColumnType) & {
     colOptions?: any;
@@ -226,6 +281,10 @@ export function isHiddenCol(
     }
     // hide system columns in other tables which are has-many used for mm
     return col.colOptions?.type === RelationTypes.HAS_MANY;
+  }
+
+  if (col.uidt === UITypes.Order) {
+    return true;
   }
 
   return ([UITypes.CreatedBy, UITypes.LastModifiedBy] as string[]).includes(
@@ -319,5 +378,41 @@ export const getUITypesForFormulaDataType = (
       return [UITypes.Email, UITypes.URL, UITypes.PhoneNumber];
     default:
       return [];
+  }
+};
+
+export const isSupportedDisplayValueColumn = (column: Partial<ColumnType>) => {
+  if (!column?.uidt) return false;
+
+  switch (column.uidt) {
+    case UITypes.SingleLineText:
+    case UITypes.Date:
+    case UITypes.DateTime:
+    case UITypes.Time:
+    case UITypes.Year:
+    case UITypes.PhoneNumber:
+    case UITypes.Email:
+    case UITypes.URL:
+    case UITypes.Number:
+    case UITypes.Currency:
+    case UITypes.Percent:
+    case UITypes.Duration:
+    case UITypes.Decimal:
+    case UITypes.Formula: {
+      return true;
+    }
+    case UITypes.LongText: {
+      if (
+        ncParseProp(column.meta)?.richMode ||
+        ncParseProp(column.meta)[LongTextAiMetaProp]
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    default: {
+      return false;
+    }
   }
 };

@@ -14,6 +14,14 @@ const FEATURES = [
     description: 'Unlock AI features to enhance your NocoDB experience.',
     enabled: false,
     isEngineering: true,
+    isEE: true,
+  },
+  {
+    id: 'integrations',
+    title: 'Integrations',
+    description: 'Enable dynamic integrations.',
+    enabled: false,
+    isEngineering: true,
   },
   {
     id: 'geodata_column',
@@ -57,7 +65,7 @@ const FEATURES = [
     enabled: false,
     isEngineering: true,
   },
-]
+] as const
 
 export const FEATURE_FLAG = Object.fromEntries(FEATURES.map((feature) => [feature.id.toUpperCase(), feature.id])) as Record<
   Uppercase<(typeof FEATURES)[number]['id']>,
@@ -74,7 +82,7 @@ export const useBetaFeatureToggle = createSharedComposable(() => {
 
   const featureStates = computed(() => {
     return features.value.reduce((acc, feature) => {
-      acc[feature.id] = feature.enabled
+      acc[feature.id] = feature.isEE && !isEeUI ? false : feature.enabled
       return acc
     }, {} as Record<FeatureId, boolean>)
   })

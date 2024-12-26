@@ -17,8 +17,6 @@ import MdiFlagOutline from '~icons/mdi/flag-outline'
 import MsMove from '~icons/material-symbols/drive-file-move-outline'
 import MSCloseRounded from '~icons/material-symbols/close-rounded'
 import MdiTableLarge from '~icons/mdi/table-large'
-import TablerColumnInsertLeft from '~icons/tabler/column-insert-left'
-import TablerColumnInsertRight from '~icons/tabler/column-insert-right'
 import MdiEyeCircleOutline from '~icons/mdi/eye-circle-outline'
 import MsGroup from '~icons/material-symbols/groups-outline-rounded'
 import MsAddBoxOutline from '~icons/nc-icons/add-box'
@@ -139,6 +137,7 @@ import NcExternalLink from '~icons/nc-icons/external-link'
 import NcCamera from '~icons/nc-icons/camera'
 import NcRefreshCW from '~icons/nc-icons/refresh-cw'
 import NcBulb from '~icons/nc-icons/bulb'
+import NcSnow from '~icons/nc-icons/snow'
 // import NcProjectGray from '~icons/nc-icons/project-gray'
 import NcPhoneCall from '~icons/nc-icons/phone-call'
 import NcItalic from '~icons/nc-icons/italic'
@@ -306,6 +305,8 @@ import NcArrowDownIcon from '~icons/nc-icons-v2/arrow-down.svg'
 import NcCornerRightUpIcon from '~icons/nc-icons-v2/corner-right-up.svg'
 import NcChevronsRightIcon from '~icons/nc-icons-v2/chevrons-right.svg'
 import NcListIcon from '~icons/nc-icons-v2/list.svg'
+import NcNumberListIcon from '~icons/nc-icons-v2/number-list.svg'
+import NcCheckListIcon from '~icons/nc-icons-v2/check-list.svg'
 import NcChevronsDownIcon from '~icons/nc-icons-v2/chevrons-down.svg'
 import NcCornerUpRightIcon from '~icons/nc-icons-v2/corner-up-right.svg'
 import NcTargetIcon from '~icons/nc-icons-v2/target.svg'
@@ -402,6 +403,7 @@ import NcUserMinusIcon from '~icons/nc-icons-v2/user-minus.svg'
 import NcBellIcon from '~icons/nc-icons-v2/bell.svg'
 import NcGitBranchIcon from '~icons/nc-icons-v2/git-branch.svg'
 import NcCodeIcon from '~icons/nc-icons-v2/code.svg'
+import NcCodeBlockIcon from '~icons/nc-icons-v2/code-block.svg'
 import NcCastIcon from '~icons/nc-icons-v2/cast.svg'
 import NcFlagIcon from '~icons/nc-icons-v2/flag.svg'
 import NcEyeOffIcon from '~icons/nc-icons-v2/eye-off.svg'
@@ -576,7 +578,9 @@ import NcPlusSquareSolid from '~icons/nc-icons/plus-square-solid'
 
 /* file types */
 
-import NcFileTypeExcel from '~icons/nc-icons-v2/file-type-csv'
+import NcFileTypeCsv from '~icons/nc-icons-v2/file-type-csv'
+import NcFileTypeCsvSmall from '~icons/nc-icons-v2/file-type-csv-small'
+import NcFileTypeExcel from '~icons/nc-icons-v2/file-type-excel'
 import NcFileTypePdf from '~icons/nc-icons-v2/file-type-pdf'
 import NcFileTypeWord from '~icons/nc-icons-v2/file-type-word'
 import NcFileTypePresentation from '~icons/nc-icons-v2/file-type-presentation'
@@ -584,6 +588,17 @@ import NcFileTypeVideo from '~icons/nc-icons-v2/file-type-video'
 import NcFileTypeAudio from '~icons/nc-icons-v2/file-type-audio'
 import NcFileTypeZip from '~icons/nc-icons-v2/file-type-zip'
 import NcFileTypeUnknown from '~icons/nc-icons-v2/file-type-unknown'
+import NcFileSearch from '~icons/nc-icons-v2/file-search'
+import NcFileTypeJson from '~icons/nc-icons-v2/file-type-json'
+
+import NcHeading1 from '~icons/nc-icons-v2/heading-1'
+import NcHeading2 from '~icons/nc-icons-v2/heading-2'
+import NcHeading3 from '~icons/nc-icons-v2/heading-3'
+import NcQuote from '~icons/nc-icons-v2/quote'
+
+import NcErd from '~icons/nc-icons/erd'
+import NcInsertBefore from '~icons/nc-icons/insert-before'
+import NcInsertAfter from '~icons/nc-icons/insert-after'
 
 // keep it for reference
 // todo: remove it after all icons are migrated
@@ -788,6 +803,7 @@ export const iconMap = {
   megaPhone: NcMegaPhone,
   nocodb: NcNocoDB,
   bulb: NcBulb,
+  snow: NcSnow,
 
   office: NcOffice,
   sort: Sort,
@@ -824,8 +840,8 @@ export const iconMap = {
   role: h('span', { class: 'material-symbols' }, 'badge'),
   tableKey: h('span', { class: 'material-symbols' }, 'table_rows'),
   export: h('span', { class: 'material-symbols' }, 'get_app'),
-  colInsertAfter: TablerColumnInsertRight,
-  colInsertBefore: TablerColumnInsertLeft,
+  colInsertAfter: NcInsertAfter,
+  colInsertBefore: NcInsertBefore,
   star: NcStar,
   unStar: NcUnStar,
   sortDesc: MsSort,
@@ -1124,6 +1140,8 @@ export const iconMap = {
   ncCornerRightUp: NcCornerRightUpIcon,
   ncChevronsRight: NcChevronsRightIcon,
   ncList: NcListIcon,
+  ncNumberList: NcNumberListIcon,
+  ncCheckList: NcCheckListIcon,
   ncChevronsDown: NcChevronsDownIcon,
   ncCornerUpRight: NcCornerUpRightIcon,
   ncTarget: NcTargetIcon,
@@ -1219,6 +1237,7 @@ export const iconMap = {
   ncBell: NcBellIcon,
   ncGitBranch: NcGitBranchIcon,
   ncCode: NcCodeIcon,
+  ncCodeBlock: NcCodeBlockIcon,
   ncCast: NcCastIcon,
   ncFlag: NcFlagIcon,
   ncEyeOff: NcEyeOffIcon,
@@ -1375,14 +1394,23 @@ export const iconMap = {
   ncPlusAi: h(NcPlusAi, { stroke: 'transparent' }),
   ncPlusMultiple: NcPlusMultiple,
   ncPlusSquareSolid: h(NcPlusSquareSolid, { stroke: 'transparent' }),
-  ncFileTypeExcel: NcFileTypeExcel,
-  ncFileTypePdf: NcFileTypePdf,
-  ncFileTypeWord: NcFileTypeWord,
-  ncFileTypePresentation: NcFileTypePresentation,
-  ncFileTypeVideo: NcFileTypeVideo,
-  ncFileTypeAudio: NcFileTypeAudio,
-  ncFileTypeZip: NcFileTypeZip,
-  ncFileTypeUnknown: NcFileTypeUnknown,
+  ncFileTypeCsv: h(NcFileTypeCsv, { stroke: 'transparent' }),
+  ncFileTypeCsvSmall: h(NcFileTypeCsvSmall, { stroke: 'transparent' }),
+  ncFileTypeExcel: h(NcFileTypeExcel, { stroke: 'transparent' }),
+  ncFileTypePdf: h(NcFileTypePdf, { stroke: 'transparent' }),
+  ncFileTypeWord: h(NcFileTypeWord, { stroke: 'transparent' }),
+  ncFileTypePresentation: h(NcFileTypePresentation, { stroke: 'transparent' }),
+  ncFileTypeVideo: h(NcFileTypeVideo, { stroke: 'transparent' }),
+  ncFileTypeAudio: h(NcFileTypeAudio, { stroke: 'transparent' }),
+  ncFileTypeZip: h(NcFileTypeZip, { stroke: 'transparent' }),
+  ncFileTypeUnknown: h(NcFileTypeUnknown, { stroke: 'transparent' }),
+  ncFileSearch: h(NcFileSearch, { stroke: 'transparent' }),
+  ncFileTypeJson: h(NcFileTypeJson, { stroke: 'transparent' }),
+  ncErd: h(NcErd, { stroke: 'transparent' }),
+  ncHeading1: NcHeading1,
+  ncHeading2: NcHeading2,
+  ncHeading3: NcHeading3,
+  ncQuote: NcQuote,
 }
 
 export const getMdiIcon = (type: string): any => {
@@ -2912,7 +2940,9 @@ export const searchableMap = {
   ncArrowDown2: { icon: NcArrowDownIcon, keywords: ['down', 'arrow', 'direction', 'navigation', 'dropdown'] },
   ncCornerRightUp: { icon: NcCornerRightUpIcon, keywords: ['Arrow', 'Direction', 'Navigation', 'Pointer', 'Upward'] },
   ncChevronsRight: { icon: NcChevronsRightIcon, keywords: ['next', 'forward', 'arrow', 'direction', 'navigation'] },
-  ncList: { icon: NcListIcon, keywords: ['menu', 'catalog', 'index', 'directory', 'checklist'] },
+  ncList: { icon: NcListIcon, keywords: ['menu', 'catalog', 'index', 'directory', 'checklist', 'bulletlist'] },
+  ncNumberList: { icon: NcNumberListIcon, keywords: ['menu', 'catalog', 'index', 'directory', 'numberlist'] },
+  ncCheckList: { icon: NcCheckListIcon, keywords: ['menu', 'catalog', 'index', 'directory', 'checklist'] },
   ncChevronsDown: { icon: NcChevronsDownIcon, keywords: ['down', 'arrow', 'chevron', 'direction', 'expand'] },
   ncCornerUpRight: { icon: NcCornerUpRightIcon, keywords: ['Arrow', 'Direction', 'Navigation', 'Pointer', 'Upward'] },
   ncTarget: { icon: NcTargetIcon, keywords: ['Aim', 'Bullseye', 'Goal', 'Focus', 'Precision'] },
@@ -3196,6 +3226,10 @@ export const searchableMap = {
   },
   ncCode: {
     icon: NcCodeIcon,
+    keywords: ['programming', 'development', 'coding', 'software', 'script'],
+  },
+  ncCodeBlock: {
+    icon: NcCodeBlockIcon,
     keywords: ['programming', 'development', 'coding', 'software', 'script'],
   },
   ncCast: {
@@ -3734,33 +3768,25 @@ export const searchableMap = {
     icon: h(NcAutoAwesome, { stroke: 'transparent' }),
     keywords: ['Magic', 'ai', 'autoAwesome', 'awesome'],
   },
-  ncFileTypePdf: {
-    icon: NcFileTypePdf,
-    keywords: ['pdf', 'document', 'file', 'adobe', 'reader'],
+  ncHeading1: {
+    icon: NcHeading1,
+    keywords: ['heading', 'h1'],
   },
-  ncFileTypeWord: {
-    icon: NcFileTypeWord,
-    keywords: ['word', 'document', 'file', 'microsoft', 'writer'],
+  ncHeading2: {
+    icon: NcHeading2,
+    keywords: ['heading', 'h2'],
   },
-  ncFileTypePresentation: {
-    icon: NcFileTypePresentation,
-    keywords: ['powerpoint', 'presentation', 'file', 'microsoft', 'office'],
+  ncHeading3: {
+    icon: NcHeading3,
+    keywords: ['heading', 'h3'],
   },
-  ncFileTypeVideo: {
-    icon: NcFileTypeVideo,
-    keywords: ['video', 'movie', 'file', 'media', 'player'],
+  ncQuote: {
+    icon: NcQuote,
+    keywords: ['quotes'],
   },
-  ncFileTypeAudio: {
-    icon: NcFileTypeAudio,
-    keywords: ['audio', 'music', 'file', 'media', 'player'],
-  },
-  ncFileTypeZip: {
-    icon: NcFileTypeZip,
-    keywords: ['zip', 'archive', 'file', 'compression', 'zipper'],
-  },
-  ncFileTypeUnknown: {
-    icon: NcFileTypeUnknown,
-    keywords: ['unknown', 'file', 'type', 'extension', 'unknown'],
+  ncFileSearch: {
+    icon: h(NcFileSearch, { stroke: 'transparent' }),
+    keywords: ['search', 'file', 'document'],
   },
 }
 
@@ -3788,3 +3814,5 @@ export const searchIcons = (searchTerm: string) => {
       keywords: iconData.keywords,
     }))
 }
+
+export type IconMapKey = keyof typeof iconMap

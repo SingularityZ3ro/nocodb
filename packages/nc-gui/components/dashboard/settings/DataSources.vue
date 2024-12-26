@@ -381,7 +381,7 @@ const handleClickRow = (source: SourceType, tab?: string) => {
                 />
               </div>
             </a-tab-pane>
-            <a-tab-pane v-if="sources && activeSource === sources[0]" key="audit">
+            <a-tab-pane v-if="isEeUI && sources && activeSource === sources[0]" key="audit">
               <template #tab>
                 <div class="tab" data-testid="nc-audit-tab">
                   <div>{{ $t('title.auditLogs') }}</div>
@@ -553,9 +553,9 @@ const handleClickRow = (source: SourceType, tab?: string) => {
                           <GeneralIcon icon="threeDotVertical" />
                         </NcButton>
                         <template #overlay>
-                          <NcMenu>
+                          <NcMenu variant="small">
                             <NcMenuItem @click="handleClickRow(source, 'edit')">
-                              <GeneralIcon class="text-gray-800" icon="edit" />
+                              <GeneralIcon icon="edit" />
                               <span>{{ $t('general.edit') }}</span>
                             </NcMenuItem>
 

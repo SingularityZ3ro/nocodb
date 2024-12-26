@@ -1,7 +1,7 @@
 const { resolve } = require('path');
 const { rspack } = require('@rspack/core');
 const nodeExternals = require('webpack-node-externals');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
 
 module.exports = {
   entry: './src/index.ts',
@@ -56,6 +56,9 @@ module.exports = {
           compress: {
             keep_classnames: true,
           },
+          mangle: {
+            keep_classnames: true,
+          },
         },
       }),
     ],
@@ -90,7 +93,7 @@ module.exports = {
     new rspack.CopyRspackPlugin({
       patterns: [{ from: 'src/public', to: 'public' }],
     }),
-    new ForkTsCheckerWebpackPlugin({
+    new TsCheckerRspackPlugin({
       typescript: {
         configFile: resolve('tsconfig.json'),
       },

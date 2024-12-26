@@ -154,6 +154,7 @@
     "details": "詳細",
     "skip": "スキップ",
     "code": "コード",
+    "codeBlock": "Code Block",
     "duplicate": "複製",
     "duplicating": "複製中",
     "duplicateEntity": "{entity}を複製",
@@ -652,6 +653,8 @@
     "lockedByUser": "Locked by {user}"
   },
   "labels": {
+    "enableSnowFall": "Enable Snowfall",
+    "disableSnowFall": "Disable Snowfall",
     "snapshotCreationFailed": "Snapshot creation failed",
     "snapshotCreationFailedDescription": "Failed to create your base snapshot. Try again later.",
     "snapshotCooldownDescription": "Snapshots can only be taken three hours apart.",
@@ -804,7 +807,7 @@
     "icon": "アイコン",
     "max": "最大値",
     "enableRichText": "リッチテキストを有効にする",
-    "idColon": "Id:",
+    "idColon": "Id: {id}",
     "copiedRecordURL": "レコードURLをコピー済み",
     "copyRecordURL": "レコードURLをコピー",
     "duplicateRecord": "レコード重複",
@@ -890,7 +893,7 @@
     "lengthValue": "長さ/値",
     "dbType": "データベースのデータ型",
     "servername": "サーバー名/ホストアドレス",
-    "sqliteFile": "SQLiteファイル",
+    "sqliteFile": "SQLite file path",
     "hostAddress": "Host address",
     "port": "Port number",
     "username": "ユーザー名",
@@ -954,7 +957,7 @@
       "joinCommunity": "NocoDB のコミュニティに参加",
       "joinReddit": "/r/NocoDB に参加",
       "followNocodb": "NocoDB をフォロー",
-      "communityTranslated": "(Community Translated)"
+      "communityTranslated": "(Community/AI Translated)"
     },
     "twitter": "Twitter",
     "docReference": "リファレンスドキュメント",
@@ -1087,7 +1090,7 @@
     "toggleSidebar": "サイドバーを切り替え",
     "addEndDate": "終了日を追加",
     "endDate": "End Date",
-    "withEndDate": "with end date",
+    "withEndDate": "With end date",
     "calendar": "カレンダー",
     "viewSettings": "設定を表示",
     "googleOAuth": "Google OAuth",
@@ -1380,7 +1383,8 @@
     "autoSuggestSelectOptions": "Auto suggest options based on field name and existing fields",
     "aiIntegrationReConfigure": "AI integration has been removed, re-configure from field edit modal to use NocoAI features",
     "aiIntegrationAddAndReConfigure": "AI integration has been removed, re-add and re-configure from field edit modal to use NocoAI features",
-    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI"
+    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI",
+    "sourceDataIsReadonly": "Source data is readonly"
   },
   "placeholder": {
     "searchIcons": "Search icons",
@@ -1640,7 +1644,7 @@
       "apiOptions": "プロジェクトへのアクセス: ",
       "submitAnotherForm": "「他の回答を送信」ボタンを表示",
       "showBlankForm": "5秒後に空白のフォームを表示",
-      "emailForm": "次のアドレスへメールを送る",
+      "emailForm": "Email responses to",
       "showSysFields": "システムフィールドを表示",
       "filterAutoApply": "自動適用",
       "formDisplayMessage": "メッセージを表示",
@@ -1648,7 +1652,7 @@
       "showAllViews": "このテーブルのすべての共有されているビューを表示する",
       "collabView": "編集権限を持つコラボレータは、ビュー構成を変更できます。",
       "lockedView": "ロック解除されるまで誰もビューの設定を変更できません。",
-      "personalView": "あなただけがビューの設定を編集できます。他の共同編集者のパーソナルビューはデフォルトで隠されています。",
+      "personalView": "Only you can edit the view configuration.",
       "canEditLockedViewConfiguration": "Unlock this view to edit the view configuration.",
       "cannotEditViewConfiguration": "You connot configure this view",
       "onlyYouCanConfigureThisView": "Only {user} can edit the view configuration.",
@@ -1834,6 +1838,7 @@
       "failedToLoadList": "リストの読み込みに失敗しました",
       "failedToLoadChildrenList": "子供リストの読み込みに失敗しました",
       "deleteFailed": "削除に失敗しました",
+      "failedToDuplicateTable": "Failed to duplicate table",
       "unlinkFailed": "リンク解除に失敗しました",
       "rowUpdateFailed": "行の更新に失敗",
       "deleteRowFailed": "行の削除に失敗",

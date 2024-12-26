@@ -28,6 +28,8 @@ const { workspaceId, baseType } = toRefs(props)
 
 const { navigateToProject } = useGlobal()
 
+const { $e } = useNuxtApp()
+
 const { clone } = useUndoRedo()
 
 const { aiIntegrationAvailable, aiError, aiLoading, createSchema, predictSchema } = useNocoAi()
@@ -145,6 +147,21 @@ const onPredictSchema = async () => {
   let currentMessageIndex = 0
   let currentCharIndex = 0
 
+  let prompt = `${aiFormState.value.prompt}`
+
+  // Append optional information if provided
+  if (aiFormState.value.organization?.trim()) {
+    prompt += ` | Organization: ${aiFormState.value.organization}`
+  }
+  if (aiFormState.value.industry?.trim()) {
+    prompt += ` | Industry: ${aiFormState.value.industry}`
+  }
+  if (aiFormState.value.audience?.trim()) {
+    prompt += ` | Audience: ${aiFormState.value.audience}`
+  }
+
+  $e('a:base:ai:generate', prompt)
+
   try {
     const displayCharByChar = () => {
       const currentMessage = loadingMessages[currentMessageIndex]
@@ -168,19 +185,6 @@ const onPredictSchema = async () => {
 
     // Set interval to display characters one by one
     timerId = setInterval(displayCharByChar, 40) // Adjust the speed as needed (100ms)
-
-    let prompt = `${aiFormState.value.prompt}`
-
-    // Append optional information if provided
-    if (aiFormState.value.organization?.trim()) {
-      prompt += ` | Organization: ${aiFormState.value.organization}`
-    }
-    if (aiFormState.value.industry?.trim()) {
-      prompt += ` | Industry: ${aiFormState.value.industry}`
-    }
-    if (aiFormState.value.audience?.trim()) {
-      prompt += ` | Audience: ${aiFormState.value.audience}`
-    }
 
     const res = await predictSchema(prompt)
 
@@ -465,7 +469,6 @@ onMounted(() => {
           </div>
           <div v-if="aiIntegrationAvailable" class="flex items-center gap-3">
             <NcButton
-              v-e="['a:base:ai:generate']"
               size="small"
               :type="aiStep !== AI_STEP.MODIFY || isOldPromptChanged ? 'primary' : 'secondary'"
               theme="ai"
@@ -582,7 +585,7 @@ onMounted(() => {
                     <template #header>
                       <div
                         class="w-full flex items-center px-4 py-2"
-                        @click="handleUpdatePreviewExpansionPanel(table.title, !viewsGrouped[table.title].length)"
+                        @click="handleUpdatePreviewExpansionPanel(table.title, !viewsGrouped[table.title]?.length)"
                       >
                         <div class="flex-1 flex items-center gap-3 text-nc-content-purple-dark">
                           <NcCheckbox :checked="!table.excluded" theme="ai" @click.stop="onExcludeTable(table)" />
@@ -603,7 +606,7 @@ onMounted(() => {
                           icon-only
                           class="!px-0 !h-6 !w-6 !min-w-6"
                           :class="{
-                            hidden: !viewsGrouped[table.title].length,
+                            hidden: !viewsGrouped[table.title]?.length,
                           }"
                         >
                           <template #icon>

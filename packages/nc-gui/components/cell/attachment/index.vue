@@ -349,9 +349,9 @@ defineExpose({
 
         <NcButton
           type="secondary"
-          size="xsmall"
+          size="xs"
           data-testid="attachment-cell-file-picker-button"
-          class="!px-2 !h-7 !min-w-[fit-content]"
+          class="!px-2 !h-6 !min-w-[fit-content]"
           @click.stop="open"
         >
           <div class="flex items-center gap-1 justify-center">
@@ -372,9 +372,9 @@ defineExpose({
         }"
         class="nc-attachment-wrapper flex cursor-pointer w-full items-center flex-wrap gap-2 mt-0 items-start overflow-y-auto nc-scrollbar-thin"
         :style="{
-          height: `max(${!rowHeight || rowHeight === 1 ? rowHeightInPx['1'] : rowHeightInPx[`${rowHeight}`] - 17}px, ${
-            isGrid ? 22 : 32
-          }px)`,
+          height: `max(${
+            !rowHeight || rowHeight === 1 ? Number(rowHeightInPx['1']) - 1 : rowHeightInPx[`${rowHeight}`] - 17
+          }px, ${isGrid ? 22 : 32}px)`,
           paddingTop: !rowHeight || rowHeight === 1 ? '4px !important' : undefined,
           paddingBottom: !rowHeight || rowHeight === 1 ? '4px !important' : undefined,
         }"
@@ -424,7 +424,7 @@ defineExpose({
         >
           <component :is="iconMap.reload" v-if="isLoading" :class="{ 'animate-infinite animate-spin': isLoading }" />
 
-          <component :is="iconMap.expand" v-else class="transform group-hover:(!text-grey-800) text-gray-700 text-xs" />
+          <component :is="iconMap.maximize" v-else class="transform group-hover:(!text-grey-800) text-gray-700 w-3 h-3" />
         </NcButton>
       </NcTooltip>
 

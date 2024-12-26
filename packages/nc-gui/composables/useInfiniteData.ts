@@ -1,5 +1,5 @@
 import type { ComputedRef, Ref } from 'vue'
-import { UITypes, extractFilterFromXwhere } from 'nocodb-sdk'
+import { UITypes, extractFilterFromXwhere, isAIPromptCol } from 'nocodb-sdk'
 import type { Api, ColumnType, LinkToAnotherRecordType, PaginatedType, RelationTypes, TableType, ViewType } from 'nocodb-sdk'
 import type { Row } from '../lib/types'
 import { validateRowFilters } from '../utils/dataUtils'
@@ -725,7 +725,10 @@ export function useInfiniteData(args: {
 
       currentRow.rowMeta.new = false
 
-      Object.assign(currentRow.row, insertedData)
+      Object.assign(currentRow.row, {
+        ...(currentRow.row ?? {}),
+        ...rowPkData(insertedData, metaValue?.columns as ColumnType[]),
+      })
 
       const insertIndex = currentRow.rowMeta.rowIndex!
 
@@ -825,7 +828,14 @@ export function useInfiniteData(args: {
         }
       }
 
-      cachedRows.value.set(insertIndex, currentRow)
+      cachedRows.value.set(insertIndex, {
+        ...currentRow,
+        rowMeta: {
+          ...currentRow.rowMeta,
+          saving: false,
+          new: false,
+        },
+      })
 
       if (!ignoreShifting) {
         totalRows.value++
@@ -916,6 +926,7 @@ export function useInfiniteData(args: {
           col.title &&
           col.title in updatedRowData &&
           (columnsToUpdate.has(col.uidt as UITypes) ||
+            isAIPromptCol(col) ||
             col.au ||
             (isValidValue(col?.cdf) && / on update /i.test(col.cdf as string)))
         ) {
@@ -961,7 +972,12 @@ export function useInfiniteData(args: {
 
     row.rowMeta.changed = false
 
-    await until(() => !(row.rowMeta?.new && row.rowMeta?.saving)).toMatch((v) => v)
+    await until(() => {
+      const cachedRow = cachedRows.value.get(row.rowMeta.rowIndex!)
+      if (!cachedRow) return true
+      return !cachedRow.rowMeta?.new || !cachedRow.rowMeta?.saving
+    }).toMatch((v) => v)
+
     let data
 
     if (row.rowMeta.new) {

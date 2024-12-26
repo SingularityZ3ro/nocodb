@@ -3,10 +3,13 @@ import {
   AppEvents,
   ButtonActionsType,
   FormulaDataTypes,
+  isAIPromptCol,
   isCreatedOrLastModifiedByCol,
   isCreatedOrLastModifiedTimeCol,
   isLinksOrLTAR,
+  isSystemColumn,
   isVirtualCol,
+  LongTextAiMetaProp,
   partialUpdateAllowedTypes,
   readonlyMetaAllowedTypes,
   RelationTypes,
@@ -66,6 +69,11 @@ import Noco from '~/Noco';
 import NcConnectionMgrv2 from '~/utils/common/NcConnectionMgrv2';
 import { MetaTable } from '~/utils/globals';
 import { MetaService } from '~/meta/meta.service';
+import {
+  convertAIRecordTypeToValue,
+  convertValueToAIRecordType,
+} from '~/utils/dataConversion';
+import { extractProps } from '~/helpers/extractProps';
 
 // todo: move
 export enum Altered {
@@ -344,7 +352,11 @@ export class ColumnsService {
     // This is the maximum length of column name allowed in the database
     const mxColumnLength = Column.getMaxColumnNameLength(sqlClientType);
 
-    if (!isVirtualCol(param.column) && !isMetaOnlyUpdateAllowed) {
+    if (
+      !isVirtualCol(param.column) &&
+      !isMetaOnlyUpdateAllowed &&
+      param.column.column_name
+    ) {
       param.column.column_name = sanitizeColumnName(
         param.column.column_name,
         source.type,
@@ -376,6 +388,7 @@ export class ColumnsService {
     if (
       !isMetaOnlyUpdateAllowed &&
       !isVirtualCol(param.column) &&
+      param.column.column_name &&
       param.column.column_name.length > mxColumnLength
     ) {
       NcError.badRequest(
@@ -390,6 +403,7 @@ export class ColumnsService {
     }
 
     if (
+      param.column.column_name &&
       !isVirtualCol(param.column) &&
       !isCreatedOrLastModifiedTimeCol(param.column) &&
       !isCreatedOrLastModifiedByCol(param.column) &&
@@ -402,6 +416,7 @@ export class ColumnsService {
       NcError.badRequest('Duplicate column name');
     }
     if (
+      param.column.title &&
       !(await Column.checkAliasAvailable(context, {
         title: param.column.title,
         fk_model_id: column.fk_model_id,
@@ -413,6 +428,12 @@ export class ColumnsService {
         `Duplicate column alias for table ${table.title} and column is ${param.column.title}. Please change the name of this column and retry.`,
       );
     }
+
+    // extract missing required props from column to avoid broken column
+    param.column = {
+      ...extractProps(column, ['column_name', 'uidt', 'dt']),
+      ...param.column,
+    };
 
     let colBody = { ...param.column } as Column & {
       formula?: string;
@@ -551,10 +572,6 @@ export class ColumnsService {
               NcError.badRequest('Webhook not found');
             }
           } else if (colBody.type === ButtonActionsType.Ai) {
-            if (!colBody.fk_integration_id) {
-              NcError.badRequest('AI Integration not found');
-            }
-
             /*
               Substitute column alias with id in prompt
             */
@@ -1297,7 +1314,11 @@ export class ColumnsService {
 
       await this.updateMetaAndDatabase(context, {
         table,
-        column: colBody,
+        // include id since it won't be part of api request
+        column: {
+          ...colBody,
+          id: column.id,
+        },
         source,
         reuse,
         processColumn: async () => {
@@ -1427,7 +1448,8 @@ export class ColumnsService {
 
         await this.updateMetaAndDatabase(context, {
           table,
-          column: colBody,
+          // pass id since it won't be part of api request
+          column: { ...colBody, id: column.id },
           source,
           reuse,
           processColumn: async () => {
@@ -1523,7 +1545,8 @@ export class ColumnsService {
 
         await this.updateMetaAndDatabase(context, {
           table,
-          column: colBody,
+          // pass id since it won't be part of api request
+          column: { ...colBody, id: column.id },
           source,
           reuse,
           processColumn: async () => {
@@ -1573,11 +1596,81 @@ export class ColumnsService {
         );
       }
 
+      if (
+        isAIPromptCol(column) &&
+        (colBody.uidt !== UITypes.LongText ||
+          (colBody.uidt === UITypes.LongText &&
+            colBody.meta?.[LongTextAiMetaProp] !== true))
+      ) {
+        const baseModel = await reuseOrSave('baseModel', reuse, async () =>
+          Model.getBaseModelSQL(context, {
+            id: table.id,
+            dbDriver: await reuseOrSave('dbDriver', reuse, async () =>
+              NcConnectionMgrv2.get(source),
+            ),
+          }),
+        );
+
+        await convertAIRecordTypeToValue({
+          source,
+          table,
+          column,
+          baseModel,
+          sqlClient,
+        });
+      } else if (isAIPromptCol(colBody)) {
+        let prompt = '';
+
+        /*
+          Substitute column alias with id in prompt
+        */
+        if (colBody.prompt_raw) {
+          await table.getColumns(context);
+
+          prompt = colBody.prompt_raw.replace(/{(.*?)}/g, (match, p1) => {
+            const column = table.columns.find((c) => c.title === p1);
+
+            if (!column) {
+              NcError.badRequest(`Field '${p1}' not found`);
+            }
+
+            return `{${column.id}}`;
+          });
+        }
+
+        colBody.prompt = prompt;
+
+        // If column wasn't AI before, convert the data to AIRecordType format
+        if (
+          column.uidt !== UITypes.LongText ||
+          column.meta?.[LongTextAiMetaProp] !== true
+        ) {
+          const baseModel = await reuseOrSave('baseModel', reuse, async () =>
+            Model.getBaseModelSQL(context, {
+              id: table.id,
+              dbDriver: await reuseOrSave('dbDriver', reuse, async () =>
+                NcConnectionMgrv2.get(source),
+              ),
+            }),
+          );
+
+          await convertValueToAIRecordType({
+            source,
+            table,
+            column,
+            baseModel,
+            sqlClient,
+            user: param.user,
+          });
+        }
+      }
+
       colBody = await getColumnPropsFromUIDT(colBody, source);
 
       await this.updateMetaAndDatabase(context, {
         table,
-        column: colBody,
+        // pass id since it won't be part of api request
+        column: { ...colBody, id: column.id },
         source,
         reuse,
         processColumn: async () => {
@@ -1631,6 +1724,7 @@ export class ColumnsService {
       column: ColumnReqType;
       user: UserType;
       reuse?: ReusableParams;
+      suppressFormulaError?: boolean;
     },
   ) {
     // if column_name is defined and title is not defined, set title to column_name
@@ -1807,28 +1901,28 @@ export class ColumnsService {
         });
         break;
       case UITypes.Formula:
-        colBody.formula = await substituteColumnAliasWithIdInFormula(
-          colBody.formula_raw || colBody.formula,
-          table.columns,
-        );
-        colBody.parsed_tree = await validateFormulaAndExtractTreeWithType({
-          // formula may include double curly brackets in previous version
-          // convert to single curly bracket here for compatibility
-          formula: colBody.formula,
-          column: {
-            ...colBody,
-            colOptions: colBody,
-          },
-          columns: table.columns,
-          clientOrSqlUi: source.type as any,
-          getMeta: async (modelId) => {
-            const model = await Model.get(context, modelId);
-            await model.getColumns(context);
-            return model;
-          },
-        });
-
         try {
+          colBody.formula = await substituteColumnAliasWithIdInFormula(
+            colBody.formula_raw || colBody.formula,
+            table.columns,
+          );
+          colBody.parsed_tree = await validateFormulaAndExtractTreeWithType({
+            // formula may include double curly brackets in previous version
+            // convert to single curly bracket here for compatibility
+            formula: colBody.formula,
+            column: {
+              ...colBody,
+              colOptions: colBody,
+            },
+            columns: table.columns,
+            clientOrSqlUi: source.type as any,
+            getMeta: async (modelId) => {
+              const model = await Model.get(context, modelId);
+              await model.getColumns(context);
+              return model;
+            },
+          });
+
           const baseModel = await reuseOrSave('baseModel', reuse, async () =>
             Model.getBaseModelSQL(context, {
               id: table.id,
@@ -1848,8 +1942,10 @@ export class ColumnsService {
             true,
           );
         } catch (e) {
-          console.error(e);
-          throw e;
+          colBody.error = e.message;
+          if (!param.suppressFormulaError) {
+            throw e;
+          }
         }
 
         await Column.insert(context, {
@@ -1914,10 +2010,6 @@ export class ColumnsService {
             colBody.fk_webhook_id = null;
           }
         } else if (colBody.type === ButtonActionsType.Ai) {
-          if (!colBody.fk_integration_id) {
-            NcError.badRequest('AI Integration not found');
-          }
-
           /*
             Substitute column alias with id in prompt
           */
@@ -2212,6 +2304,29 @@ export class ColumnsService {
             }
           }
 
+          if (isAIPromptCol(colBody)) {
+            let prompt = '';
+
+            /*
+            Substitute column alias with id in prompt
+          */
+            if (colBody.prompt_raw) {
+              await table.getColumns(context);
+
+              prompt = colBody.prompt_raw.replace(/{(.*?)}/g, (match, p1) => {
+                const column = table.columns.find((c) => c.title === p1);
+
+                if (!column) {
+                  NcError.badRequest(`Field '${p1}' not found`);
+                }
+
+                return `{${column.id}}`;
+              });
+            }
+
+            colBody.prompt = prompt;
+          }
+
           const tableUpdateBody = {
             ...table,
             tn: table.table_name,
@@ -2295,7 +2410,7 @@ export class ColumnsService {
 
     const column = await Column.get(context, { colId: param.columnId }, ncMeta);
 
-    if (column.system && !param.forceDeleteSystem) {
+    if ((column.system || isSystemColumn(column)) && !param.forceDeleteSystem) {
       NcError.badRequest(
         `The column '${
           column.title || column.column_name

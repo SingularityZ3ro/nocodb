@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { type ColumnReqType, type ColumnType } from 'nocodb-sdk'
+import { type ColumnReqType, type ColumnType, isAIPromptCol, isSupportedDisplayValueColumn } from 'nocodb-sdk'
 import {
   ButtonActionsType,
   UITypes,
@@ -10,7 +10,7 @@ import {
   isVirtualCol,
   readonlyMetaAllowedTypes,
 } from 'nocodb-sdk'
-import { AiWizardTabsType, type PredictedFieldType } from '#imports'
+import { AiWizardTabsType, type PredictedFieldType, type UiTypesType } from '#imports'
 import MdiPlusIcon from '~icons/mdi/plus-circle-outline'
 import MdiMinusIcon from '~icons/mdi/minus-circle-outline'
 import MdiIdentifierIcon from '~icons/mdi/identifier'
@@ -183,21 +183,10 @@ const uiFilters = (t: UiTypesType) => {
   const specificDBType = t.name === UITypes.SpecificDBType && isXcdbBase(meta.value?.source_id)
   const showDeprecatedField = !t.deprecated || showDeprecated.value
 
-  const hideAiPromptOnEdit = !((t.name === AIPrompt || t.name === AIButton) && isEdit.value)
-
-  const hideBetaAi = !(t.name === AIPrompt || t.name === AIButton) || isFeatureEnabled(FEATURE_FLAG.AI_FEATURES)
-
+  const showAiFields = [AIPrompt, AIButton].includes(t.name) ? isFeatureEnabled(FEATURE_FLAG.AI_FEATURES) && !isEdit.value : true
   const isAllowToAddInFormView = isForm.value ? !formViewHiddenColTypes.includes(t.name) : true
 
-  return (
-    systemFiledNotEdited &&
-    geoDataToggle &&
-    !specificDBType &&
-    showDeprecatedField &&
-    isAllowToAddInFormView &&
-    hideAiPromptOnEdit &&
-    hideBetaAi
-  )
+  return systemFiledNotEdited && geoDataToggle && !specificDBType && showDeprecatedField && isAllowToAddInFormView && showAiFields
 }
 
 const extraIcons = ref<Record<string, string>>({})
@@ -206,7 +195,7 @@ const predictedFieldType = ref<UITypes | null>(null)
 
 // const lastPredictedAt = ref<number>(0)
 
-const uiTypesOptions = computed<typeof uiTypes>(() => {
+const uiTypesOptions = computed<(UiTypesType & { disabled?: boolean; tooltip?: string })[]>(() => {
   const types = [
     ...uiTypes.filter(uiFilters),
     ...(!isEdit.value && meta?.value?.columns?.every((c) => !c.pk)
@@ -247,7 +236,25 @@ const uiTypesOptions = computed<typeof uiTypes>(() => {
     }
   }
 
-  return types
+  if (!isEdit.value) {
+    return types
+  } else {
+    return types.map((type) => {
+      if (!isEdit.value) return type
+
+      const isColumnTypeDisabled =
+        !!column.value?.pv && column.value?.uidt !== type.name && !isSupportedDisplayValueColumn({ uidt: type.name as UITypes })
+
+      return {
+        ...type,
+        disabled: isColumnTypeDisabled,
+        tooltip:
+          isColumnTypeDisabled && UITypesName[type.name]
+            ? `${UITypesName[type.name]} field cannot be used as display value field`
+            : '',
+      }
+    })
+  }
 })
 
 const editOrAddRef = ref<HTMLDivElement>()
@@ -264,7 +271,7 @@ const handleScrollDebounce = useDebounceFn(() => {
   }
 }, 500)
 
-const onSelectType = (uidt: UITypes | typeof AIButton, fromSearchList = false) => {
+const onSelectType = (uidt: UITypes | typeof AIButton | typeof AIPrompt, fromSearchList = false) => {
   let preload
 
   if (fromSearchList && !isEdit.value && aiAutoSuggestMode.value) {
@@ -276,9 +283,17 @@ const onSelectType = (uidt: UITypes | typeof AIButton, fromSearchList = false) =
     preload = {
       type: ButtonActionsType.Ai,
     }
+  } else if (uidt === AIPrompt) {
+    formState.value.uidt = UITypes.LongText
+    preload = {
+      meta: {
+        [LongTextAiMetaProp]: true,
+      },
+    }
   } else {
     formState.value.uidt = uidt
   }
+
   onUidtOrIdTypeChange(preload)
 
   nextTick(() => {
@@ -292,7 +307,9 @@ const reloadMetaAndData = async () => {
   eventBus.emit(SmartsheetStoreEvents.FIELD_RELOAD)
 
   if (!isKanban.value) {
-    reloadDataTrigger?.trigger()
+    reloadDataTrigger?.trigger({
+      fieldAdd: true,
+    })
   }
 }
 
@@ -507,10 +524,7 @@ const submitBtnLabel = computed(() => {
 })
 
 const filterOption = (input: string, option: { value: UITypes }) => {
-  return (
-    option.value.toLowerCase().includes(input.toLowerCase()) ||
-    (UITypesName[option.value] && UITypesName[option.value].toLowerCase().includes(input.toLowerCase()))
-  )
+  return searchCompare([option.value, ...(UITypesName[option.value] ? [UITypesName[option.value]] : [])], input)
 }
 
 const triggerDescriptionEnable = () => {
@@ -616,6 +630,10 @@ const onToggleTag = (field: PredictedFieldType, select = false) => {
 
 const isAiButtonSelectOption = (uidt: string) => {
   return uidt === UITypes.Button && formState.value.uidt === UITypes.Button && formState.value.type === ButtonActionsType.Ai
+}
+
+const isAiPromptSelectOption = (uidt: string) => {
+  return uidt === UITypes.LongText && isAIPromptCol(formState.value)
 }
 
 const aiPromptInputRef = ref<HTMLElement>()
@@ -966,7 +984,7 @@ watch(activeAiTab, (newValue) => {
                 type="primary"
                 theme="ai"
                 :loading="saving"
-                :disabled="disableSubmitBtn || !activeTabSelectedFields.length || saving"
+                :disabled="disableSubmitBtn || saving"
                 size="small"
                 :label="submitBtnLabel.label"
                 :loading-label="submitBtnLabel.loadingLabel"
@@ -1076,20 +1094,33 @@ watch(activeAiTab, (newValue) => {
                 v-for="opt of uiTypesOptions"
                 :key="opt.name"
                 :value="opt.name"
-                :disabled="isMetaReadOnly && !readonlyMetaAllowedTypes.includes(opt.name)"
+                :disabled="(isMetaReadOnly && !readonlyMetaAllowedTypes.includes(opt.name)) || opt.disabled"
                 v-bind="validateInfos.uidt"
                 :class="{
                   'ant-select-item-option-active-selected': showHoverEffectOnSelectedType && formState.uidt === opt.name,
-                  '!text-nc-content-purple-dark': [AIButton].includes(opt.name),
+                  '!text-nc-content-purple-dark': [AIPrompt, AIButton].includes(opt.name),
                 }"
                 @mouseover="handleResetHoverEffect"
               >
-                <div class="w-full flex gap-2 items-center justify-between" :data-testid="opt.name" :data-title="formState?.type">
+                <NcTooltip
+                  class="w-full flex gap-2 items-center justify-between"
+                  placement="right"
+                  :disabled="!opt?.tooltip"
+                  :attrs="{
+                    'data-testid': opt.name,
+                  }"
+                >
+                  <template #title> {{ opt?.tooltip }} </template>
                   <div class="flex-1 flex gap-2 items-center max-w-[calc(100%_-_24px)]">
                     <component
-                      :is="isAiButtonSelectOption(opt.name) && !isColumnTypeOpen ? iconMap.cellAiButton : opt.icon"
-                      class="nc-field-type-icon w-4 h-4"
-                      :class="isMetaReadOnly && !readonlyMetaAllowedTypes.includes(opt.name) ? 'text-gray-300' : 'text-gray-700'"
+                      :is="
+                        isAiButtonSelectOption(opt.name) && !isColumnTypeOpen
+                          ? iconMap.cellAiButton
+                          : isAiPromptSelectOption(opt.name) && !isColumnTypeOpen
+                          ? iconMap.cellAi
+                          : opt.icon
+                      "
+                      class="nc-field-type-icon w-4 h-4 !opacity-90 text-current"
                     />
                     <div class="flex-1">
                       {{ UITypesName[opt.name] }}
@@ -1111,7 +1142,7 @@ watch(activeAiTab, (newValue) => {
                       'text-nc-content-purple-medium': isAiMode,
                     }"
                   />
-                </div>
+                </NcTooltip>
               </a-select-option>
             </a-select>
           </NcTooltip>
@@ -1148,7 +1179,11 @@ watch(activeAiTab, (newValue) => {
         <SmartsheetColumnQrCodeOptions v-if="formState.uidt === UITypes.QrCode" v-model="formState" />
         <SmartsheetColumnBarcodeOptions v-if="formState.uidt === UITypes.Barcode" v-model="formState" />
         <SmartsheetColumnCurrencyOptions v-if="formState.uidt === UITypes.Currency" v-model:value="formState" />
-        <SmartsheetColumnLongTextOptions v-if="formState.uidt === UITypes.LongText" v-model:value="formState" />
+        <SmartsheetColumnLongTextOptions
+          v-if="formState.uidt === UITypes.LongText"
+          v-model="formState"
+          @navigate-to-integrations="handleNavigateToIntegrations"
+        />
         <SmartsheetColumnDurationOptions v-if="formState.uidt === UITypes.Duration" v-model:value="formState" />
         <SmartsheetColumnRatingOptions v-if="formState.uidt === UITypes.Rating" v-model:value="formState" />
         <SmartsheetColumnCheckboxOptions v-if="formState.uidt === UITypes.Checkbox" v-model:value="formState" />
@@ -1399,11 +1434,6 @@ watch(activeAiTab, (newValue) => {
   }
 }
 
-:deep(.ant-select-disabled.nc-column-type-input) {
-  .nc-field-type-icon {
-    @apply text-current;
-  }
-}
 :deep(.ant-select.nc-column-type-input) {
   .nc-new-field-badge {
     @apply hidden;

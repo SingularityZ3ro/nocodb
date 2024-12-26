@@ -154,6 +154,7 @@
     "details": "വിശദാംശങ്ങൾ",
     "skip": "വിട്ടുക",
     "code": "കോഡ്",
+    "codeBlock": "Code Block",
     "duplicate": "പകര്‍പ്പിക്കുക",
     "duplicating": "പകര്‍ത്തിക്കൊണ്ടിരിക്കുന്നു",
     "duplicateEntity": "മറുകൂടി {entity}",
@@ -652,6 +653,8 @@
     "lockedByUser": "Locked by {user}"
   },
   "labels": {
+    "enableSnowFall": "Enable Snowfall",
+    "disableSnowFall": "Disable Snowfall",
     "snapshotCreationFailed": "Snapshot creation failed",
     "snapshotCreationFailedDescription": "Failed to create your base snapshot. Try again later.",
     "snapshotCooldownDescription": "Snapshots can only be taken three hours apart.",
@@ -890,7 +893,7 @@
     "lengthValue": "വില ക്ഷണം / പചകപ്പന്തം",
     "dbType": "ഡാറ്റാബേസ് തരപ്രകാരം",
     "servername": "സെർവറ്നെയിം / ഹോസ്റ്റ് അഡ്രസ്",
-    "sqliteFile": "SQLite ഫയൽ പാത",
+    "sqliteFile": "SQLite file path",
     "hostAddress": "ആതിഥേയ വിലാസം",
     "port": "Port നമ്പര്‍",
     "username": "ഉപയോക്തൃനാമം",
@@ -954,7 +957,7 @@
       "joinCommunity": "NocoDB സമൂഹത്തിൽ ചേരുക",
       "joinReddit": "/r/NocoDB",
       "followNocodb": "NocoDB നെ പിന്തുടരുക",
-      "communityTranslated": "(കോമ്യുണിറ്റി/AI വിവർത്തനം)"
+      "communityTranslated": "(Community/AI Translated)"
     },
     "twitter": "Twitter",
     "docReference": "ഡോക്യുമെന്റ് റഫറൻസ്",
@@ -1037,7 +1040,7 @@
     "appearanceSettings": "ദൃശ്യസ്ഥാപന ക്രമീകരണങ്ങൾ",
     "backgroundColor": "പശ്ചാത്തല നിറം",
     "hideNocodbBranding": "നൊകോഡിബി ബ്രാൻഡിങ് മറയ്ക്കുക",
-    "showOnConditions": "ശരത്ത് കാണിക്കുക",
+    "showOnConditions": "Show on conditions",
     "showFieldOnConditionsMet": "അവസ്ഥകൾ അനുസരിച്ചാണ് ഫീൽഡ് മാത്രം കാണിക്കുന്നത്",
     "limitOptions": "ക്രമീകരണങ്ങൾ",
     "limitOptionsSubtext": "ലഭ്യമായ വൃദ്ധികൾ തിരഞ്ഞെടുക്കുന്നത് വഴി ഉപയോക്താക്കൾക്ക് കാഴ്ചയുള്ള വൃദ്ധികളെ പരിമിതപ്പെടുത്തുക",
@@ -1087,7 +1090,7 @@
     "toggleSidebar": "സൈഡ്ബാർ മാറ്റുക",
     "addEndDate": "അവസാന തീയതി ചേർക്കുക",
     "endDate": "End Date",
-    "withEndDate": "അവസാന തീയതിയുള്ള",
+    "withEndDate": "With end date",
     "calendar": "കലണ്ടർ",
     "viewSettings": "ദൃശ്യങ്ങൾ ക്രമീകരിക്കുക",
     "googleOAuth": "ഗൂഗിൾ ഓത്",
@@ -1380,7 +1383,8 @@
     "autoSuggestSelectOptions": "Auto suggest options based on field name and existing fields",
     "aiIntegrationReConfigure": "AI integration has been removed, re-configure from field edit modal to use NocoAI features",
     "aiIntegrationAddAndReConfigure": "AI integration has been removed, re-add and re-configure from field edit modal to use NocoAI features",
-    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI"
+    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI",
+    "sourceDataIsReadonly": "Source data is readonly"
   },
   "placeholder": {
     "searchIcons": "ചിഹ്നങ്ങൾ തിരയുക",
@@ -1640,7 +1644,7 @@
       "apiOptions": "ഋണധനം ശ്രദ്ധിക്കാനാവാനുള്ള വഴി",
       "submitAnotherForm": "'മറ്റൊരു ഫോം സമർപ്പിക്കുക' ബട്ടണിൽ കാഴ്ച",
       "showBlankForm": "5 സെക്കൻഡ് കഴിഞ്ഞ് ഒരുലൻ ഭാവൃകം അന്വഷണമില്ലാതെ കാണിക്കുക",
-      "emailForm": "ഇമെയിൽ പ്രതികരണങ്ങൾ",
+      "emailForm": "Email responses to",
       "showSysFields": "സിസ്റ്റം ഫീൽഡുകൾ കാണിക്കുക",
       "filterAutoApply": "ഓട്ടോമാറ്റിക് പ്രയോഗം",
       "formDisplayMessage": "പ്രദർശന സന്ദേശം",
@@ -1834,6 +1838,7 @@
       "failedToLoadList": "പട്ടിക ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു",
       "failedToLoadChildrenList": "കുട്ടികളുടെ പട്ടിക ലോഡ് ചെയ്യുന്നതു പരാജയപ്പെട്ടു",
       "deleteFailed": "മായ്ക്കൽ പരാജയപ്പെട്ടു",
+      "failedToDuplicateTable": "Failed to duplicate table",
       "unlinkFailed": "അൺലിങ്ക് പരാജയപ്പെട്ടു",
       "rowUpdateFailed": "റെക്കോർഡ് അപ്ഡേറ്റ് പരാജയപ്പെട്ടു",
       "deleteRowFailed": "റെക്കോർഡ് മായ്ക്കാൻ പരാജയപ്പെട്ടു",

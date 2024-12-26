@@ -154,6 +154,7 @@
     "details": "Detaljer",
     "skip": "Hopp over",
     "code": "Kode",
+    "codeBlock": "Code Block",
     "duplicate": "Dupliser",
     "duplicating": "Kopierer",
     "duplicateEntity": "Dupliser {entity}",
@@ -652,6 +653,8 @@
     "lockedByUser": "Locked by {user}"
   },
   "labels": {
+    "enableSnowFall": "Enable Snowfall",
+    "disableSnowFall": "Disable Snowfall",
     "snapshotCreationFailed": "Snapshot creation failed",
     "snapshotCreationFailedDescription": "Failed to create your base snapshot. Try again later.",
     "snapshotCooldownDescription": "Snapshots can only be taken three hours apart.",
@@ -804,7 +807,7 @@
     "icon": "Ikon",
     "max": "Maks",
     "enableRichText": "Aktiver rik tekst",
-    "idColon": "Id:",
+    "idColon": "Id: {id}",
     "copiedRecordURL": "Kopiert rekord-URL",
     "copyRecordURL": "Kopier rekord-URL",
     "duplicateRecord": "Dupliser post",
@@ -890,7 +893,7 @@
     "lengthValue": "Lengde / verdi",
     "dbType": "Databasetype",
     "servername": "servernavn / hostAddr",
-    "sqliteFile": "SQLite-fil",
+    "sqliteFile": "SQLite file path",
     "hostAddress": "Vertsadresse",
     "port": "Portnummer",
     "username": "Brukernavn",
@@ -954,7 +957,7 @@
       "joinCommunity": "Join NocoDB Community",
       "joinReddit": "Bli med /r/NocoDB",
       "followNocodb": "Følg NocoDB",
-      "communityTranslated": "(Community Translated)"
+      "communityTranslated": "(Community/AI Translated)"
     },
     "twitter": "Twitter",
     "docReference": "Dokumentreferanse",
@@ -1087,7 +1090,7 @@
     "toggleSidebar": "Bytt sidepanel",
     "addEndDate": "Legg til sluttdato",
     "endDate": "End Date",
-    "withEndDate": "with end date",
+    "withEndDate": "With end date",
     "calendar": "Kalender",
     "viewSettings": "Vis innstillinger",
     "googleOAuth": "Google OAuth",
@@ -1380,7 +1383,8 @@
     "autoSuggestSelectOptions": "Auto suggest options based on field name and existing fields",
     "aiIntegrationReConfigure": "AI integration has been removed, re-configure from field edit modal to use NocoAI features",
     "aiIntegrationAddAndReConfigure": "AI integration has been removed, re-add and re-configure from field edit modal to use NocoAI features",
-    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI"
+    "generateFieldDataUsingAiButtonOption": "Generate value for multiple fields in this table using record information and NocoAI",
+    "sourceDataIsReadonly": "Source data is readonly"
   },
   "placeholder": {
     "searchIcons": "Søk ikoner",
@@ -1640,7 +1644,7 @@
       "apiOptions": "Tilgang til prosjekt via",
       "submitAnotherForm": "Vis 'Send inn en annen form' -knapp",
       "showBlankForm": "Vis et tomt skjema etter 5 sekunder",
-      "emailForm": "E-post meg på",
+      "emailForm": "Email responses to",
       "showSysFields": "Vis systemfelt",
       "filterAutoApply": "Auto gjelder",
       "formDisplayMessage": "Vis melding",
@@ -1648,7 +1652,7 @@
       "showAllViews": "Vis alle felles syn på dette bordet",
       "collabView": "Samarbeidspartnere med redigeringsrettigheter eller høyere kan endre visningskonfigurasjonen.",
       "lockedView": "Ingen kan redigere visningskonfigurasjonen til den er ulåst.",
-      "personalView": "Bare du kan redigere visningskonfigurasjonen. Andre samarbeidspartnere personlige synspunkter er skjult som standard.",
+      "personalView": "Only you can edit the view configuration.",
       "canEditLockedViewConfiguration": "Unlock this view to edit the view configuration.",
       "cannotEditViewConfiguration": "You connot configure this view",
       "onlyYouCanConfigureThisView": "Only {user} can edit the view configuration.",
@@ -1834,6 +1838,7 @@
       "failedToLoadList": "Failed to load list",
       "failedToLoadChildrenList": "Failed to load children list",
       "deleteFailed": "Delete failed",
+      "failedToDuplicateTable": "Failed to duplicate table",
       "unlinkFailed": "Unlink failed",
       "rowUpdateFailed": "Row update failed",
       "deleteRowFailed": "Failed to delete row",

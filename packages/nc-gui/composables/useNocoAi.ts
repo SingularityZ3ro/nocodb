@@ -1,4 +1,4 @@
-import { type IntegrationType, IntegrationsType, type SerializedAiViewType, type TableType } from 'nocodb-sdk'
+import type { IntegrationType, SerializedAiViewType, TableType } from 'nocodb-sdk'
 
 const aiIntegrationNotFound = 'AI integration not found'
 
@@ -7,21 +7,23 @@ export const useNocoAi = createSharedComposable(() => {
 
   const workspaceStore = useWorkspace()
 
-  const { activeWorkspaceId } = storeToRefs(workspaceStore)
-
   const basesStore = useBases()
 
   const { activeProjectId } = storeToRefs(basesStore)
-
-  const aiIntegrationAvailable = ref(true)
 
   const aiLoading = ref(false)
 
   const aiError = ref<string>('')
 
-  const aiIntegrations = ref<IntegrationType[]>([])
+  const aiIntegrations = ref<Partial<IntegrationType>[]>([])
 
-  const { listIntegrationByType } = useProvideIntegrationViewStore()
+  const aiIntegrationAvailable = computed(() => !!aiIntegrations.value.length)
+
+  const isAiIntegrationAvailableInList = (integrationId?: string) => {
+    if (!aiIntegrationAvailable.value) return false
+
+    return ncIsArrayIncludes(aiIntegrations.value, integrationId, 'id')
+  }
 
   const callAiUtilsApi = async (operation: string, input: any, customBaseId?: string, skipMsgToast = false) => {
     try {
@@ -59,7 +61,7 @@ export const useNocoAi = createSharedComposable(() => {
 
   const callAiSchemaApi = async (operation: string, input: any, customBaseId?: string, skipMsgToast = false) => {
     try {
-      const baseId = customBaseId || activeProjectId.value
+      const baseId = customBaseId || workspaceStore.activeProjectId.value
 
       if (!aiIntegrationAvailable.value || !baseId) {
         return
@@ -93,14 +95,14 @@ export const useNocoAi = createSharedComposable(() => {
 
   const callAiSchemaCreateApi = async (operation: string, input: any, skipMsgToast = false) => {
     try {
-      if (!aiIntegrationAvailable.value || !activeWorkspaceId.value) {
+      if (!aiIntegrationAvailable.value || !workspaceStore.activeWorkspaceId) {
         return
       }
 
       aiLoading.value = true
       aiError.value = ''
 
-      const res = await $api.ai.schemaCreate(activeWorkspaceId.value, { operation, input })
+      const res = await $api.ai.schemaCreate(workspaceStore.activeWorkspaceId, { operation, input })
 
       return res
     } catch (e) {
@@ -172,6 +174,7 @@ export const useNocoAi = createSharedComposable(() => {
     history?: string[],
     customBaseId?: string,
     description?: string,
+    _unsupportedColumn: string[] = [],
     skipMsgToast = true,
   ) => {
     const baseId = customBaseId || activeProjectId.value
@@ -180,6 +183,25 @@ export const useNocoAi = createSharedComposable(() => {
 
     if (res?.formulas) {
       return res.formulas
+    }
+
+    return []
+  }
+
+  const predictNextButtons = async (
+    tableId: string,
+    history?: string[],
+    customBaseId?: string,
+    description?: string,
+    _unsupportedColumn: string[] = [],
+    skipMsgToast = true,
+  ) => {
+    const baseId = customBaseId || activeProjectId.value
+
+    const res = await callAiUtilsApi('predictNextButtons', { tableId, history, description }, baseId, skipMsgToast)
+
+    if (res?.buttons) {
+      return res.buttons
     }
 
     return []
@@ -338,36 +360,16 @@ export const useNocoAi = createSharedComposable(() => {
     }
   }
 
-  const loadAiIntegrations = async () => {
-    aiIntegrations.value = (await listIntegrationByType(IntegrationsType.Ai)) || []
-
-    if (aiIntegrations.value.length) {
-      aiIntegrationAvailable.value = true
-    } else {
-      aiIntegrationAvailable.value = false
-    }
-  }
-
-  const { signedIn } = useGlobal()
-
-  watch(
-    signedIn,
-    (val) => {
-      if (val) {
-        loadAiIntegrations()
-      }
-    },
-    { immediate: true },
-  )
-
   return {
     aiIntegrationAvailable,
+    isAiIntegrationAvailableInList,
     aiLoading,
     aiError,
     predictFieldType,
     predictSelectOptions,
     predictNextFields,
     predictNextFormulas,
+    predictNextButtons,
     createViews,
     predictNextTables,
     generateTables,
@@ -381,6 +383,5 @@ export const useNocoAi = createSharedComposable(() => {
     repairFormula,
     predictViews,
     aiIntegrations,
-    loadAiIntegrations,
   }
 })
