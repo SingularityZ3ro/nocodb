@@ -18,8 +18,9 @@ const isEE = process.env.EE
 export default defineConfig({
   extract: {
     include: [
-      isEE ? '../**/*.{vue,html,jsx,tsx,css,scss}' : '**/*.{vue,html,jsx,tsx,css,scss}',
-      isEE ? '../extensions/**/*.md' : 'extensions/**/*.md',
+      ...(isEE
+        ? ['../**/*.{vue,html,jsx,tsx,css,scss}', '../extensions/**/*.md']
+        : ['**/*.{vue,html,jsx,tsx,css,scss}', 'extensions/**/*.md']),
     ],
     exclude: ['node_modules', '.git'],
   },
@@ -106,6 +107,7 @@ export default defineConfig({
       borderColor: {
         primary: 'rgba(51, 102, 255, 1)',
         accent: 'rgba(var(--color-accent), var(--tw-border-opacity))',
+        error: 'var(--ant-error-color)',
       },
       backgroundColor: {
         primary: 'rgba(var(--color-primary), var(--tw-bg-opacity))',

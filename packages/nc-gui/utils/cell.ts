@@ -1,6 +1,7 @@
 import type { ColumnType } from 'nocodb-sdk'
 import { ButtonActionsType, UITypes } from 'nocodb-sdk'
 import dayjs from 'dayjs'
+import tinycolor from 'tinycolor2'
 
 export const dataTypeLow = (column: ColumnType) => column.dt?.toLowerCase()
 export const isBoolean = (column: ColumnType, abstractType?: any) =>
@@ -40,6 +41,8 @@ export const isUser = (column: ColumnType) => column.uidt === UITypes.User
 export const isButton = (column: ColumnType) => column.uidt === UITypes.Button
 export const isAiButton = (column: ColumnType) =>
   column.uidt === UITypes.Button && (column?.colOptions as any)?.type === ButtonActionsType.Ai
+export const isScriptButton = (column: ColumnType) =>
+  column.uidt === UITypes.Button && (column?.colOptions as any)?.type === ButtonActionsType.Script
 export const isAI = (column: ColumnType) =>
   column.uidt === UITypes.LongText && parseProp(column?.meta)?.[LongTextAiMetaProp] === true
 
@@ -118,4 +121,27 @@ export const rowHeightTruncateLines = (rowHeight?: number, isSelectOption = fals
     default:
       return 1
   }
+}
+
+export const isShowNullField = (column: ColumnType) => {
+  return [
+    UITypes.SingleLineText,
+    UITypes.LongText,
+    UITypes.PhoneNumber,
+    UITypes.Email,
+    UITypes.URL,
+    UITypes.Number,
+    UITypes.Decimal,
+    UITypes.Percent,
+    UITypes.Duration,
+    UITypes.JSON,
+  ].includes(column.uidt as UITypes)
+}
+
+export const getSelectTypeOptionTextColor = (color?: string | null): string => {
+  color = color ?? '#ccc' // Set default only if color is null or undefined
+
+  return tinycolor.isReadable(color, '#fff', { level: 'AA', size: 'large' })
+    ? '#fff'
+    : tinycolor.mostReadable(color, ['#0b1d05', '#fff']).toHex8String()
 }

@@ -60,6 +60,8 @@ const showCurrentDateOption = computed(() => {
 const isCurrentDate = computed(() => {
   return showCurrentDateOption.value && cdfValue.value?.toUpperCase?.() === sqlUi.value?.getCurrentDateDefault?.(vModel.value)
 })
+
+const { isSystem } = useColumnCreateStoreOrThrow()
 </script>
 
 <template>
@@ -69,6 +71,7 @@ const isCurrentDate = computed(() => {
       type="text"
       class="!text-gray-700"
       data-testid="nc-show-default-value-btn"
+      :disabled="isSystem"
       @click.stop="isVisibleDefaultValueInput = true"
     >
       <div class="flex items-center gap-2">
@@ -115,8 +118,8 @@ const isCurrentDate = computed(() => {
               vModel.uidt,
             ) || isCurrentDate
           "
-          class="w-4 h-4 cursor-pointer rounded-full z-3 !text-black-500 text-gray-500 cursor-pointer hover:bg-gray-50"
-          @click="updateCdfValue(null)"
+          class="w-4 h-4 cursor-pointer rounded-full z-3 !text-black-500 text-gray-500 cursor-pointer hover:bg-gray-50 default-value-clear"
+          @click.stop="updateCdfValue(null)"
         />
       </div>
     </div>

@@ -500,9 +500,15 @@ export class TestConnectionError extends NcBaseError {
 }
 
 export class AjvError extends NcBaseError {
-  constructor(param: { message: string; errors: ErrorObject[] }) {
+  humanReadableError: boolean;
+  constructor(param: {
+    message: string;
+    errors: ErrorObject[];
+    humanReadableError?: boolean;
+  }) {
     super(param.message);
     this.errors = param.errors;
+    this.humanReadableError = param.humanReadableError || false;
   }
 
   errors: ErrorObject[];
@@ -608,6 +614,10 @@ const errorHelpers: {
     message: (offset: string) => `Offset value '${offset}' is invalid`,
     code: 422,
   },
+  [NcErrorType.INVALID_PAGE_VALUE]: {
+    message: (page: string) => `Page value '${page}' is invalid`,
+    code: 422,
+  },
   [NcErrorType.INVALID_PK_VALUE]: {
     message: (value: any, pkColumn: string) =>
       `Primary key value '${value}' is invalid for column '${pkColumn}'`,
@@ -663,6 +673,14 @@ const errorHelpers: {
   },
   [NcErrorType.INVALID_ATTACHMENT_UPLOAD_SCOPE]: {
     message: 'Invalid attachment upload scope',
+    code: 400,
+  },
+  [NcErrorType.REORDER_FAILED]: {
+    message: 'Reorder failed',
+    code: 400,
+  },
+  [NcErrorType.CANNOT_CALCULATE_INTERMEDIATE_ORDER]: {
+    message: 'Cannot calculate intermediate order',
     code: 400,
   },
 };
@@ -886,6 +904,12 @@ export class NcError {
       ...args,
     });
   }
+  static invalidPageValue(page: string | number, args?: NcErrorArgs) {
+    throw new NcBaseErrorv2(NcErrorType.INVALID_PAGE_VALUE, {
+      params: `${page}`,
+      ...args,
+    });
+  }
 
   static invalidPrimaryKey(value: any, pkColumn: string, args?: NcErrorArgs) {
     throw new NcBaseErrorv2(NcErrorType.INVALID_PK_VALUE, {
@@ -957,7 +981,11 @@ export class NcError {
     throw new Forbidden(message);
   }
 
-  static ajvValidationError(param: { message: string; errors: ErrorObject[] }) {
+  static ajvValidationError(param: {
+    message: string;
+    errors: ErrorObject[];
+    humanReadableError: boolean;
+  }) {
     throw new AjvError(param);
   }
 
@@ -996,6 +1024,17 @@ export class NcError {
       params: id,
       ...(args || {}),
     });
+  }
+
+  static cannotCalculateIntermediateOrderError() {
+    throw new NcBaseErrorv2(
+      NcErrorType.CANNOT_CALCULATE_INTERMEDIATE_ORDER,
+      {},
+    );
+  }
+
+  static reorderFailed() {
+    throw new NcBaseErrorv2(NcErrorType.REORDER_FAILED, {});
   }
 
   static integrationLinkedWithMultiple(

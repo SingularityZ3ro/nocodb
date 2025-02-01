@@ -299,7 +299,7 @@ const handleClickRow = (source: SourceType, tab?: string) => {
       <a-input
         v-model:value="searchQuery"
         type="text"
-        class="nc-search-data-source-input !max-w-90 nc-input-sm"
+        class="nc-search-data-source-input nc-input-border-on-value !max-w-90 nc-input-sm"
         placeholder="Search data source"
         allow-clear
       >
@@ -381,16 +381,7 @@ const handleClickRow = (source: SourceType, tab?: string) => {
                 />
               </div>
             </a-tab-pane>
-            <a-tab-pane v-if="isEeUI && sources && activeSource === sources[0]" key="audit">
-              <template #tab>
-                <div class="tab" data-testid="nc-audit-tab">
-                  <div>{{ $t('title.auditLogs') }}</div>
-                </div>
-              </template>
-              <div class="p-6 h-full">
-                <LazyDashboardSettingsBaseAudit :source-id="activeSource.id" />
-              </div>
-            </a-tab-pane>
+
             <a-tab-pane key="acl">
               <template #tab>
                 <div class="tab" data-testid="nc-acl-tab">

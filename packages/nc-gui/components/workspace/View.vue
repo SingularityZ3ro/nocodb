@@ -83,7 +83,6 @@ onMounted(() => {
           {{ $t('title.teamAndSettings') }}
         </h1>
       </div>
-      <LazySmartsheetTopbarSnowfallTrigger />
       <SmartsheetTopbarCmdK />
     </div>
     <template v-else>
@@ -130,7 +129,7 @@ onMounted(() => {
           <template #tab>
             <div class="tab-title">
               <GeneralIcon icon="users" class="h-4 w-4" />
-              Members
+              {{ $t('labels.members') }}
             </div>
           </template>
           <WorkspaceCollaboratorsList :workspace-id="currentWorkspace.id" />
@@ -142,24 +141,10 @@ onMounted(() => {
           <template #tab>
             <div class="tab-title" data-testid="nc-workspace-settings-tab-settings">
               <GeneralIcon icon="ncSettings" class="h-4 w-4" />
-              Settings
+              {{ $t('labels.settings') }}
             </div>
           </template>
           <WorkspaceSettings :workspace-id="currentWorkspace.id" />
-        </a-tab-pane>
-      </template>
-
-      <template v-if="isUIAllowed('workspaceAuditList') && !props.workspaceId">
-        <a-tab-pane key="audit" class="w-full">
-          <template #tab>
-            <div class="tab-title">
-              <GeneralIcon icon="audit" class="h-4 w-4" />
-              Audit Logs
-            </div>
-          </template>
-          <div class="h-[calc(100vh-92px)] px-6">
-            <WorkspaceAuditLogs :workspace-id="currentWorkspace.id" />
-          </div>
         </a-tab-pane>
       </template>
     </NcTabs>

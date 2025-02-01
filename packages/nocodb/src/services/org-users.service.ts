@@ -16,7 +16,7 @@ import { validatePayload } from '~/helpers';
 import { NcError } from '~/helpers/catchError';
 import { extractProps } from '~/helpers/extractProps';
 import { randomTokenString } from '~/helpers/stringHelpers';
-import { BaseUser, Store, SyncSource, User } from '~/models';
+import { BaseUser, PresignedUrl, Store, SyncSource, User } from '~/models';
 
 import Noco from '~/Noco';
 import { MetaTable, RootScopes } from '~/utils/globals';
@@ -24,15 +24,19 @@ import { MetaTable, RootScopes } from '~/utils/globals';
 @Injectable()
 export class OrgUsersService {
   constructor(
-    private readonly baseUsersService: BaseUsersService,
-    private readonly appHooksService: AppHooksService,
+    protected readonly baseUsersService: BaseUsersService,
+    protected readonly appHooksService: AppHooksService,
   ) {}
 
   async userList(param: {
     // todo: add better typing
     query: Record<string, any>;
   }) {
-    return await User.list(param.query);
+    const users = await User.list(param.query);
+
+    await PresignedUrl.signMetaIconImage(users);
+
+    return users;
   }
 
   async userUpdate(param: {
@@ -152,10 +156,8 @@ export class OrgUsersService {
           const count = await User.count();
 
           this.appHooksService.emit(AppEvents.ORG_USER_INVITE, {
-            invitedBy: param.req.user,
             user,
             count,
-            ip: param.req.clientIp,
             req: param.req,
           });
 
@@ -247,9 +249,7 @@ export class OrgUsersService {
     });
 
     this.appHooksService.emit(AppEvents.ORG_USER_RESEND_INVITE, {
-      invitedBy: param.req.user,
-      user,
-      ip: param.req.clientIp,
+      user: user as UserType,
       req: param.req,
     });
 

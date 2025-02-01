@@ -45,8 +45,7 @@ export class ColumnPageObject extends BasePage {
       },
       click: async () => {
         if (await showDefautlValueBtn.isVisible()) {
-          await showDefautlValueBtn.waitFor();
-          await showDefautlValueBtn.click({ force: true });
+          await showDefautlValueBtn.click();
 
           await showDefautlValueBtn.waitFor({ state: 'hidden' });
           await this.get().locator('.nc-default-value-wrapper').waitFor({ state: 'visible' });
@@ -394,6 +393,8 @@ export class ColumnPageObject extends BasePage {
     await this.rootPage.locator('li[role="menuitem"]:has-text("Edit"):visible').last().click();
 
     await this.get().waitFor({ state: 'visible' });
+
+    await this.rootPage.waitForTimeout(200);
 
     if (selectType) {
       await this.selectType({ type, first: true });
